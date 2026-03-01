@@ -3088,13 +3088,6 @@
         });
       }
 
-      let adminReplyToId = null;
-
-      function setAdminReply(id, username, msgText) {
-        adminReplyToId = id;
-        document.getElementById('adminChatInput').placeholder = `Replying to ${username}: ${msgText.substring(0, 15)}...`;
-      }
-
       function renderChats(messages, containerId, isAdmin = false) {
         const container = document.getElementById(containerId);
         const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
@@ -3128,16 +3121,6 @@
             const finalColor = isCaptain ? '#a855f7' : color;
             const finalAvatar = isCaptain ? '/images/captain.png' : avatar;
 
-            let replyHTML = '';
-            if (m.reply_message) {
-              replyHTML = `
-                <div style="background: rgba(0,0,0,0.2); border-left: 3px solid #3b82f6; padding: 6px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; color: #9ca3af;">
-                  <div style="color: #3b82f6; font-weight: bold; font-size: 11px; margin-bottom: 2px;">${m.reply_username}</div>
-                  <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">${m.reply_message}</div>
-                </div>
-              `;
-            }
-
             container.innerHTML += `
               <div class="chat-item">
                 <img src="${finalAvatar}" class="chat-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Y2EzYWYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTkgMjF2LTJhNCA0IDAgMCAwLTQtNEg5YTQgNCAwIDAgMC00IDR2MiI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCI+PC9jaXJjbGU+PC9zdmc+'" />
@@ -3147,10 +3130,9 @@
                     <span class="chat-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})}</span>
                   </div>
                   <div class="chat-bubble ${isCaptain ? 'admin' : ''}">
-                    ${replyHTML}
                     ${m.message}
                   </div>
-                  ${isAdmin ? `<button onclick="setAdminReply(${m.id}, '${m.username}', '${m.message.replace(/'/g, "\\'")}')" style="margin-top:2px; padding:2px 5px; background:#3b82f6; color:white; border:none; border-radius:3px; cursor:pointer; font-size:10px; margin-right: 5px;">Reply</button><button onclick="deleteChat(${m.id})" style="margin-top:2px; padding:2px 5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; font-size:10px;">Delete</button>` : ''}
+                  ${isAdmin ? `<button onclick="deleteChat(${m.id})" style="display:block; margin-top:2px; padding:2px 5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; font-size:10px;">Delete</button>` : ''}
                 </div>
               </div>
             `;
@@ -3378,15 +3360,11 @@
           const res = await fetch(BACKEND_URL + '/admin/chat/send', {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'Authorization': adminPwd},
-            body: JSON.stringify({message: msg, replyToId: adminReplyToId})
+            body: JSON.stringify({message: msg})
           });
           const data = await res.json();
           if(!data.success) alert(data.error);
-          else {
-            adminReplyToId = null;
-            document.getElementById('adminChatInput').placeholder = "Admin reply...";
-            fetchChats();
-          }
+          else fetchChats();
         } catch(e) { }
       }
 
