@@ -3089,18 +3089,10 @@
       }
 
       let adminReplyToId = null;
-      let chatReplyToId = null;
 
       function setAdminReply(id, username, msgText) {
         adminReplyToId = id;
         document.getElementById('adminChatInput').placeholder = `Replying to ${username}: ${msgText.substring(0, 15)}...`;
-      }
-
-      function setChatReply(id, username, msgText) {
-        chatReplyToId = id;
-        const input = document.getElementById('chatInput');
-        input.placeholder = `Replying to ${username}: ${msgText.substring(0, 15)}...`;
-        input.focus();
       }
 
       function renderChats(messages, containerId, isAdmin = false) {
@@ -3108,8 +3100,10 @@
         const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
         
         container.innerHTML = '';
-          [...messages].reverse().forEach(m => {
-            if(m.type === 'cashrain') {
+        // Messages are already sorted by date desc from backend, and we want newest at bottom.
+        // The previous code used messages.reverse() which is correct for newest at bottom.
+        messages.reverse().forEach(m => {
+          if(m.type === 'cashrain') {
             const claimedRatio = m.current_claims + ' / ' + m.max_claims;
             const isDistributed = m.current_claims >= m.max_claims;
             const bg = isDistributed ? '#374151' : '#166534';
@@ -3156,10 +3150,7 @@
                     ${replyHTML}
                     ${m.message}
                   </div>
-                  <div style="margin-top:2px; display:flex; gap:5px;">
-                    <button onclick="setChatReply(${m.id}, '${name}', '${m.message.replace(/'/g, "\\'")}')" style="padding:2px 5px; background:#1f2937; color:#9ca3af; border:1px solid #374151; border-radius:3px; cursor:pointer; font-size:10px;">Reply</button>
-                    ${isAdmin ? `<button onclick="setAdminReply(${m.id}, '${name}', '${m.message.replace(/'/g, "\\'")}')" style="padding:2px 5px; background:#3b82f6; color:white; border:none; border-radius:3px; cursor:pointer; font-size:10px;">Admin Reply</button><button onclick="deleteChat(${m.id})" style="padding:2px 5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; font-size:10px;">Delete</button>` : ''}
-                  </div>
+                  ${isAdmin ? `<button onclick="setAdminReply(${m.id}, '${m.username}', '${m.message.replace(/'/g, "\\'")}')" style="margin-top:2px; padding:2px 5px; background:#3b82f6; color:white; border:none; border-radius:3px; cursor:pointer; font-size:10px; margin-right: 5px;">Reply</button><button onclick="deleteChat(${m.id})" style="margin-top:2px; padding:2px 5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; font-size:10px;">Delete</button>` : ''}
                 </div>
               </div>
             `;
@@ -3179,11 +3170,7 @@
         if(!msg) return;
         if(!currentUser) { alert("Please login to chat"); return; }
         
-        const replyId = chatReplyToId;
         input.value = '';
-        input.placeholder = "Send a message...";
-        chatReplyToId = null;
-
         const errorEl = document.getElementById('chatErrorMsg');
         if(errorEl) errorEl.style.display = 'none';
 
@@ -3191,11 +3178,7 @@
           const res = await fetch(BACKEND_URL + '/chat/send', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-              phone: currentUser.phone, 
-              message: msg,
-              replyToId: replyId
-            })
+            body: JSON.stringify({phone: currentUser.phone, message: msg})
           });
           const data = await res.json();
           if(!data.success) {
