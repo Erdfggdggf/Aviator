@@ -2438,7 +2438,7 @@
        if(document.getElementById('admin-create')) document.getElementById('admin-create').style.display = (sec==='create') ? 'block' : 'none';
        if(sec==='users') loadAdminUsers();
        if(sec==='tx') loadAdminTx();
-       if(sec==='chat') fetchChats(); // Load chat messages for admin
+       if(sec==='chat') fetchChats();
     }
 
     async function adminCreateAccount() {
@@ -2726,7 +2726,7 @@
   </script>
 
     <!-- Chat Popup -->
-    <div id="chatPopup" style="display:none; position:fixed; top:0; right:0; width:100%; max-width:400px; height:100%; background:#111827; z-index:10000; flex-direction:column; box-shadow:-5px 0 15px rgba(0,0,0,0.5); transform: translateX(100%); transition: transform 0.3s ease;">
+    <div id="chatPopup" style="display:none; position:fixed; top:0; right:0; width:100%; max-width:450px; height:100%; background:#111827; z-index:10000; flex-direction:column; box-shadow:-5px 0 15px rgba(0,0,0,0.5); transform: translateX(100%); transition: transform 0.3s ease;">
       <div style="padding:15px; border-bottom:1px solid #1f2937; display:flex; align-items:center; justify-content:space-between; background:#1f2937;">
         <div style="display:flex; align-items:center; gap:10px;">
           <svg onclick="closeChat()" style="cursor:pointer; color:white;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -2740,8 +2740,8 @@
       </div>
       
       <div id="chatInputArea" style="padding:10px 15px; border-top:1px solid #1f2937; background:#1f2937; display:flex; align-items:center; gap:10px;">
-        <input type="text" id="chatInput" placeholder="Your message..." style="flex:1; padding:15px; border-radius:25px; border:none; background:#111827; color:white; font-size:15px; outline:none;" onkeypress="if(event.key === 'Enter') sendChat()">
-        <svg onclick="sendChat()" style="cursor:pointer; color:#ef4444;" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <input type="text" id="chatInput" placeholder="Your message..." style="flex:1; padding:10px 15px; border-radius:20px; border:none; background:#111827; color:white; font-size:14px; outline:none;" onkeypress="if(event.key === 'Enter') sendChat()">
+        <svg onclick="sendChat()" style="cursor:pointer; color:#ef4444;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </div>
     </div>
 
@@ -2797,6 +2797,33 @@
         } catch(e) { }
       }
 
+      // Hash function to assign consistent random avatar/color based on username
+      function getConsistentAvatarAndColor(username) {
+        let hash = 0;
+        for (let i = 0; i < username.length; i++) {
+          hash = username.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        
+        // 10 avatars av1.png to av10.png
+        const avatarNum = Math.abs(hash) % 10 + 1;
+        
+        // 8 distinct colors
+        const colors = [
+          '#ef4444', // red
+          '#f97316', // orange
+          '#f59e0b', // yellow
+          '#84cc16', // green-ish
+          '#10b981', // emerald
+          '#06b6d4', // teal
+          '#3b82f6', // blue
+          '#8b5cf6', // violet
+          '#d946ef'  // fuchsia
+        ];
+        const colorHex = colors[Math.abs(hash) % colors.length];
+        
+        return { avatar: `/images/av${avatarNum}.png`, color: colorHex };
+      }
+
       function renderChats(messages, containerId, isAdmin = false) {
         const container = document.getElementById(containerId);
         container.innerHTML = '';
@@ -2821,33 +2848,32 @@
             `;
           } else {
             const isCaptain = m.is_admin;
-            // Generate deterministic color and avatar based on username
-            const strSum = (m.username || 'anon').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-            const colors = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#4ade80', '#34d399', '#2dd4bf', '#22d3ee', '#38bdf8', '#60a5fa', '#818cf8', '#a78bfa', '#c084fc', '#e879f9', '#f472b6', '#fb7185'];
-            const userColor = isCaptain ? '#a855f7' : colors[strSum % colors.length];
             const name = isCaptain ? 'captain' : m.username;
-            const avatarIndex = (strSum % 10) + 1; // 1 to 10
-            const avatarImg = isCaptain ? 'https://api.dicebear.com/7.x/bottts/svg?seed=captain' : `av${avatarIndex}.png`; // local avatar files
+            const { avatar, color } = getConsistentAvatarAndColor(name);
+            const finalColor = isCaptain ? '#a855f7' : color;
+            const finalAvatar = isCaptain ? '/images/captain.png' : avatar; // Could be a specific admin avatar
 
             container.innerHTML += `
-              <div style="margin-bottom:10px; display:flex; flex-direction:column; gap:2px;">
-                <div style="display:flex; gap:10px; align-items:center;">
-                  <img src="${avatarImg}" style="width:24px; height:24px; border-radius:50%; background:#374151;" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${name}'">
+              <div style="margin-bottom:10px; display:flex; gap:10px;">
+                <img src="${finalAvatar}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Y2EzYWYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTkgMjF2LTJhNCA0IDAgMCAwLTQtNEg5YTQgNCAwIDAgMC00IDR2MiI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCI+PC9jaXJjbGU+PC9zdmc+'" style="width:30px; height:30px; border-radius:50%; background:#374151; object-fit:cover;" alt="av" />
+                <div style="display:flex; flex-direction:column; gap:2px; flex:1;">
                   <div style="display:flex; gap:10px; align-items:baseline;">
-                    <span style="color:${userColor}; font-weight:bold; font-size:13px;">${name}</span>
+                    <span style="color:${finalColor}; font-weight:bold; font-size:13px;">${name}</span>
                     <span style="color:#6b7280; font-size:10px;">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})}</span>
                   </div>
+                  <div style="background:#1f2937; padding:8px 12px; border-radius:0 10px 10px 10px; color:white; font-size:14px; width:fit-content; max-width:100%; word-break:break-word;">
+                    ${m.message}
+                  </div>
+                  ${isAdmin ? `<button onclick="deleteChat(${m.id})" style="align-self:flex-start; margin-top:2px; padding:2px 5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; font-size:10px;">Delete</button>` : ''}
                 </div>
-                <div style="background:#1f2937; padding:8px 12px; border-radius:0 10px 10px 10px; color:white; font-size:14px; width:fit-content; max-width:80%; margin-left:34px;">
-                  ${m.message}
-                </div>
-                ${isAdmin ? `<div style="margin-left:34px; margin-top:2px; display:flex; gap:5px;"><button onclick="replyAdminChat('${m.username}')" style="padding:2px 5px; background:#3b82f6; color:white; border:none; border-radius:3px; cursor:pointer; font-size:10px;">Reply</button><button onclick="deleteChat(${m.id})" style="padding:2px 5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; font-size:10px;">Delete</button></div>` : ''}
               </div>
             `;
           }
         });
-        container.scrollTop = container.scrollHeight;
-      }
+        // Scroll to bottom only if user is at bottom? (Simplified: just scroll to bottom on initial load, or leave as is)
+        if (container.scrollHeight - container.scrollTop - container.clientHeight < 100) {
+            container.scrollTop = container.scrollHeight;
+        }
       }
 
       async function sendChat() {
@@ -2857,6 +2883,9 @@
         if(!currentUser) { alert("Please login to chat"); return; }
         
         input.value = '';
+        const errorEl = document.getElementById('chatErrorMsg');
+        if(errorEl) errorEl.style.display = 'none';
+
         try {
           const res = await fetch(BACKEND_URL + '/chat/send', {
             method: 'POST',
@@ -2865,25 +2894,24 @@
           });
           const data = await res.json();
           if(!data.success) {
-            // Show error inside chat instead of alert
-            const errDiv = document.createElement('div');
-            errDiv.style.color = '#ef4444';
-            errDiv.style.fontSize = '12px';
-            errDiv.style.textAlign = 'center';
-            errDiv.style.padding = '5px';
-            errDiv.innerText = data.error;
-            const container = document.getElementById('chatMessages');
-            container.appendChild(errDiv);
-            container.scrollTop = container.scrollHeight;
+            // Display error inside chat area
+            if(!errorEl) {
+               const chatInputArea = document.getElementById('chatInputArea');
+               const errDiv = document.createElement('div');
+               errDiv.id = 'chatErrorMsg';
+               errDiv.style.color = '#ef4444';
+               errDiv.style.fontSize = '12px';
+               errDiv.style.marginBottom = '5px';
+               errDiv.innerText = data.error;
+               chatInputArea.parentNode.insertBefore(errDiv, chatInputArea);
+            } else {
+               errorEl.style.display = 'block';
+               errorEl.innerText = data.error;
+            }
           } else {
             fetchChats();
           }
         } catch(e) { }
-      }
-
-      function replyAdminChat(username) {
-        document.getElementById('adminChatInput').value = `@${username} `;
-        document.getElementById('adminChatInput').focus();
       }
 
       async function claimRain(rainId) {
