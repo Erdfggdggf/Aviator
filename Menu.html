@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swiftcrash - My Account / Menu</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #09090b; color: white; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+    
+    /* Header */
+    .header { padding: 15px; display: flex; justify-content: flex-start; gap: 15px; align-items: center; border-bottom: 1px solid #1f2937; background: #111827; position: sticky; top: 0; z-index: 100; }
+    .header-btn { background: #1f2937; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .header-title { margin: 0; font-size: 18px; flex: 1; text-align: center; }
+    .notification-bell { display: block; position: relative; cursor: pointer; }
+    .notification-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    
+    /* Content Padding */
+    .content { padding: 15px; }
+
+    /* Cards */
+    .card { background: #111827; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #1f2937; }
+    .card-title { font-size: 12px; color: #9ca3af; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }
+    
+    /* Buttons */
+    .btn-deposit { flex: 1; background: #22c55e; color: white; padding: 12px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; font-size: 14px; }
+    .btn-withdraw { flex: 1; background: #f59e0b; color: white; padding: 12px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; font-size: 14px; }
+
+    /* List Items */
+    .list-container { background: #111827; border-radius: 12px; border: 1px solid #1f2937; overflow: hidden; margin-bottom: 15px; }
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #1f2937; cursor: pointer; }
+    .list-item:last-child { border-bottom: none; }
+    .list-item-content { display: flex; align-items: center; gap: 15px; font-weight: 500; font-size: 14px; }
+    .list-arrow { color: #9ca3af; }
+
+    /* Communication Cards */
+    .comm-cards { display: flex; gap: 10px; margin-bottom: 15px; }
+    .comm-btn { flex: 1; padding: 15px; border-radius: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: bold; color: white; font-size: 14px; }
+    .comm-whatsapp { background: #22c55e; }
+    .comm-call { background: #111827; border: 1px solid #1f2937; }
+
+    /* Social Media */
+    .social-row { display: flex; justify-content: space-between; margin-bottom: 15px; gap: 10px; }
+    .social-btn { flex: 1; height: 50px; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: white; text-decoration: none; font-weight: bold; font-size: 14px; }
+    .social-ig { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+    .social-fb { background: #1877F2; }
+    .social-x { background: #000; border: 1px solid #333; }
+    .social-tk { background: #000; border: 1px solid #333; }
+    .social-yt { background: #FF0000; }
+
+    /* Info Boxes */
+    .info-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .info-box { flex: 1; background: #111827; border-radius: 12px; border: 1px solid #1f2937; padding: 15px; }
+    .info-label { font-size: 10px; color: #9ca3af; margin-bottom: 8px; text-transform: uppercase; font-weight: bold; }
+    .info-value { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; }
+    
+    /* Footer */
+    .footer { position: fixed; bottom: 0; width: 100%; background: #111827; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #1f2937; z-index: 10; }
+    .footer a { color: #9ca3af; text-decoration: none; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .footer a.active { color: #facc15; }
+    .footer .center-btn { background: #facc15; border-radius: 50%; width: 48px; height: 48px; display: flex; justify-content: center; align-items: center; color: #000; margin-top: -24px; box-shadow: 0 -4px 10px rgba(250, 204, 21, 0.3); }
+
+  
+    /* Toast and Loading */
+    #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+    .toast-msg { padding: 15px 20px; border-radius: 8px; font-weight: bold; font-size: 14px; text-align: center; color: white; opacity: 0; transform: translateY(-20px); transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.3); pointer-events: auto; }
+    .toast-msg.show { opacity: 1; transform: translateY(0); }
+    .toast-success { background: linear-gradient(135deg, #16a34a, #22c55e); }
+    .toast-error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+
+    /* Popups and Pages */
+    .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+    .popup-content { background: #111827; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; position: relative; max-height: 90vh; overflow-y: auto; border: 1px solid #1f2937; }
+    .popup-close { position: absolute; top: 10px; right: 15px; color: white; cursor: pointer; font-size: 24px; font-weight: bold; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-size: 12px; color: #9ca3af; }
+    .form-control { width: 100%; padding: 10px; background: #111827; border: 1px solid #374151; color: white; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+    .bet-presets { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 15px; }
+    .preset { background: #1f2937; border: none; color: white; padding: 10px 0; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .btn-submit { width: 100%; padding: 12px; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; }
+    .spinner { display: none; margin: 10px auto; border: 4px solid rgba(255,255,255,0.1); border-left-color: #f97316; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* Page popups */
+    .page-popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #09090b; z-index: 2000; flex-direction: column; overflow-y: auto; }
+    .page-header { padding: 15px; display: flex; align-items: center; border-bottom: 1px solid #1f2937; position: sticky; top: 0; background: #09090b; z-index: 10; gap: 15px; }
+    .page-back-btn { background: #1f2937; border: none; color: white; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; }
+    .page-title { margin: 0; font-size: 18px; flex: 1; text-align: center; }
+    .page-content { padding: 15px; flex: 1; }
+    .tabs-container { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; }
+    .tab-btn { background: #1f2937; color: #9ca3af; border: none; padding: 8px 16px; border-radius: 20px; font-size: 14px; white-space: nowrap; cursor: pointer; }
+    .tab-btn.active { background: #facc15; color: #000; font-weight: bold; }
+    .search-box { background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 10px; width: 100%; color: white; margin-bottom: 15px; box-sizing: border-box; }
+
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <button class="header-btn" onclick="window.location.href='index.html'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <h2 class="header-title">My Account</h2>
+    <div class="notification-bell" onclick="openNotifications()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <div class="notification-badge">3</div>
+    </div>
+  </div>
+
+  <div class="content">
+    
+    <!-- Profile Info Card -->
+    <div class="card">
+      <h3 style="margin: 0 0 5px 0; color: #facc15; font-size: 18px;" id="userNameDisplay">Swiftcrash user</h3>
+      <p style="margin: 0 0 15px 0; color: #9ca3af; font-size: 14px;" id="userPhoneDisplay">254700000000</p>
+      
+      <div style="font-size: 12px; color: #9ca3af; margin-bottom: 5px;">Available Balance</div>
+      <div style="font-size: 28px; font-weight: bold; color: #22c55e; margin-bottom: 20px;" id="userBalanceDisplay">KSH 0.00</div>
+      
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-deposit" onclick="openDeposit()">DEPOSIT</button>
+        <button class="btn-withdraw" onclick="openWithdraw()">WITHDRAW</button>
+      </div>
+    </div>
+
+    <!-- Quick Action -->
+    <div class="card-title">Quick Action</div>
+    <div class="list-container">
+      <div class="list-item" onclick="openTransactionHistory()">
+        <div class="list-item-content">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Transaction history
+        </div>
+        <span class="list-arrow">></span>
+      </div>
+      <div class="list-item" onclick="openMyBets()">
+        <div class="list-item-content">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Users bets
+        </div>
+        <span class="list-arrow">></span>
+      </div>
+      <div class="list-item" onclick="openNotifications()">
+        <div class="list-item-content">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+          Notifications
+        </div>
+        <span class="list-arrow">></span>
+      </div>
+      <div class="list-item" onclick="openReferralHistory()">
+        <div class="list-item-content">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Refer and earn
+        </div>
+        <span class="list-arrow">></span>
+      </div>
+      <div class="list-item" onclick="document.getElementById('page-support').style.display='flex'">
+        <div class="list-item-content">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Support
+        </div>
+        <span class="list-arrow">></span>
+      </div>
+      <div class="list-item" onclick="document.getElementById('page-password').style.display='flex'">
+        <div class="list-item-content">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Change password
+        </div>
+        <span class="list-arrow">></span>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h3 style="color: #22c55e; font-size: 24px; margin: 0 0 5px 0;">Swiftcrash</h3>
+      <p style="color: #9ca3af; font-size: 12px; margin: 0;">Kenya's #1 Betting Platform</p>
+    </div>
+
+    <!-- Communication Cards -->
+    <div class="comm-cards">
+      <a href="https://wa.me/254723308753" class="comm-btn comm-whatsapp">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z"/><path d="M14 14a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-1 0v1Z"/></svg>
+        WhatsApp
+      </a>
+      <a href="tel:254723308753" class="comm-btn comm-call">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Call Us
+      </a>
+    </div>
+
+    <!-- Accordion Menus -->
+    <div class="list-container">
+      <div class="list-item" onclick="toggleAccordion('acc-products')">
+        <div class="list-item-content">Products</div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div id="acc-products" style="display:none; padding: 15px; background: #1f2937; border-bottom: 1px solid #374151;">
+        <a href="index.html" style="color: white; text-decoration: none; display: block; padding: 5px 0;">Aviator</a>
+      </div>
+
+      <div class="list-item" onclick="toggleAccordion('acc-support')">
+        <div class="list-item-content">Support</div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div id="acc-support" style="display:none; padding: 15px; background: #1f2937; border-bottom: 1px solid #374151;">
+        <div style="display: flex; justify-content: space-between; padding: 5px 0; color: #9ca3af;"><span>Hotline</span><a href="tel:0715979797" style="color: white; text-decoration: none; font-weight: bold;">0715 979 797</a></div>
+        <div style="display: flex; justify-content: space-between; padding: 5px 0; color: #9ca3af;"><span>Email</span><a href="mailto:care@betfalme.contact" style="color: white; text-decoration: none; font-weight: bold;">care@betfalme.contact</a></div>
+      </div>
+
+      <div class="list-item" onclick="toggleAccordion('acc-info')">
+        <div class="list-item-content">Info</div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div id="acc-info" style="display:none; padding: 15px; background: #1f2937; border-bottom: 1px solid #374151;">
+        <div style="padding: 5px 0; color: #9ca3af; cursor: pointer;" onclick="document.getElementById('page-terms').style.display='flex'">Terms & Conditions</div>
+        <div style="padding: 5px 0; color: #9ca3af; cursor: pointer;" onclick="document.getElementById('page-privacy').style.display='flex'">Privacy Policy</div>
+        <div style="padding: 5px 0; color: #9ca3af; cursor: pointer;" onclick="document.getElementById('page-responsible').style.display='flex'">Responsible Gaming</div>
+      </div>
+
+      <div class="list-item" onclick="toggleAccordion('acc-18')">
+        <div class="list-item-content">18+ Only</div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div id="acc-18" style="display:none; padding: 15px; background: #1f2937;">
+        <div style="color: #9ca3af; font-size: 14px;">You must be 18+ to play. Gamble responsibly.</div>
+      </div>
+    </div>
+
+    <!-- Social Media -->
+    <div class="social-row">
+      <a href="https://instagram.com/" target="_blank" class="social-btn social-ig"><i class="fab fa-instagram fa-lg"></i></a>
+      <a href="https://facebook.com/" target="_blank" class="social-btn social-fb"><i class="fab fa-facebook-f fa-lg"></i></a>
+      <a href="https://x.com/" target="_blank" class="social-btn social-x"><i class="fa-brands fa-x-twitter fa-lg"></i></a>
+      <a href="https://tiktok.com/" target="_blank" class="social-btn social-tk"><i class="fab fa-tiktok fa-lg"></i></a>
+      <a href="https://youtube.com/" target="_blank" class="social-btn social-yt"><i class="fab fa-youtube fa-lg"></i></a>
+    </div>
+
+    <!-- Info Boxes (Pay With / Age Limit) -->
+    <div class="info-row">
+      <div class="info-box">
+        <div class="info-label">Pay With</div>
+        <div class="info-value" style="color: #22c55e;">
+          <span style="background: white; color: black; padding: 3px 6px; border-radius: 4px; font-size: 10px;">M-PESA</span>
+          562424
+        </div>
+      </div>
+      <div class="info-box">
+        <div class="info-label">Age Limit</div>
+        <div class="info-value" style="color: #ef4444;">
+          <span style="background: #ef4444; color: white; padding: 3px 6px; border-radius: 4px; font-size: 10px;">18+</span>
+          Adults Only
+        </div>
+      </div>
+    </div>
+
+    <!-- Legal Text -->
+    <div style="text-align: center; font-size: 11px; color: #9ca3af; margin-bottom: 30px;">
+      <h4 style="color: white; margin-bottom: 8px; font-size: 14px;">License</h4>
+      <p style="line-height: 1.5;">Swiftcrash is licensed by the Betting Control and Licensing Board of Kenya (BCLB) under the Betting, Lotteries and Gaming Act, 1966, and any regulations made thereunder under License Numbers: BK-0001132 and PG-0001386.</p>
+      
+      <h4 style="color: white; margin-bottom: 8px; margin-top: 20px; font-size: 14px;">Responsible Gaming Policy</h4>
+      <p style="line-height: 1.5;">This is a real-money gambling app. Please gamble responsibly and only bet what you can afford. For gambling addiction help and support, please contact us at <a href="tel:0715979797" style="color: #22c55e; text-decoration: none; font-weight: bold;">0715 979 797</a> or visit <a href="http://www.responsiblegambling.or.ke" style="color: #22c55e; text-decoration: none; font-weight: bold;">www.responsiblegambling.or.ke</a>.</p>
+      <p style="margin-top: 20px;">© 2026 Swiftcrash Kenya</p>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card-title">Danger Zone</div>
+    <div class="list-container">
+      <div class="list-item" onclick="openDeleteAccount()" style="padding: 15px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <div style="background: rgba(239, 68, 68, 0.15); padding: 10px; border-radius: 8px; color: #ef4444; display: flex;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+          </div>
+          <div>
+            <div style="color: #ef4444; font-weight: bold; margin-bottom: 4px; font-size: 14px;">Delete Account</div>
+            <div style="color: #9ca3af; font-size: 12px;">Permanently remove your data</div>
+          </div>
+        </div>
+        <span style="color: #ef4444;">></span>
+      </div>
+    </div>
+
+    <button style="width: 100%; background: #111827; border: 1px solid #1f2937; color: white; padding: 15px; border-radius: 12px; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; font-size: 14px;" onclick="signOut()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </button>
+  </div>
+
+  <div class="footer">
+    <a href="index.html" class="active">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><rect width="20" height="12" x="2" y="6" rx="2"/><path d="M6 12h4"/><path d="M8 10v4"/><path d="M15 13h.01"/><path d="M18 11h.01"/></svg>
+      Game
+    </a>
+    <a href="Bets.html">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+      Bets
+    </a>
+    <a href="Wallet.html">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a8 8 0 0 1-5 7.96V16a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v5.96A8 8 0 0 1 2 15V7"/><path d="M22 10.5v1.07a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10.5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z"/></svg>
+      Wallet
+    </a>
+  </div>
+
+  <script>
+
+  const BACKEND_URL = 'https://crash-nndg.onrender.com';
+
+  let currentUser = null;
+  let allTransactions = [];
+  let txFilterTab = 'all';
+  let txSearchText = '';
+  
+  let allBets = [];
+  let betsFilterTab = 'all';
+  
+  let allNotifications = [];
+  let notifFilterTab = 'all';
+
+  function showNotification(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if(!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast-msg toast-${type}`;
+    toast.innerText = message;
+    container.appendChild(toast);
+    
+    void toast.offsetWidth;
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  window.alert = function(msg) {
+    const type = msg.toLowerCase().includes('fail') || msg.toLowerCase().includes('error') || msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('insufficient') ? 'error' : 'success';
+    showNotification(msg, type);
+  };
+
+  function initMenu() {
+    const userStr = localStorage.getItem('swiftcrash_user');
+    if (userStr) {
+      try {
+        currentUser = JSON.parse(userStr);
+        document.getElementById('userNameDisplay').innerText = currentUser.username || 'Swiftcrash user';
+        document.getElementById('userPhoneDisplay').innerText = currentUser.phone || '000000000';
+        document.getElementById('userBalanceDisplay').innerText = 'KSH ' + parseFloat(currentUser.balance || 0).toFixed(2);
+        
+        fetchNotificationsCount();
+        refreshBalanceSilently();
+        
+        setInterval(() => {
+          refreshBalanceSilently();
+          fetchNotificationsCount();
+        }, 10000);
+        
+        // Setup referral link
+        const refLink = `https://swiftcrash.com/?ref=${currentUser.username}`;
+        const refEl = document.getElementById('referralLinkText');
+        if (refEl) refEl.innerText = refLink;
+        const refCodeEl = document.getElementById('referralCodeText');
+        if (refCodeEl) refCodeEl.innerText = currentUser.username;
+        
+      } catch(e) {}
+    } else {
+      window.location.href = 'index.html';
+    }
+  }
+
+  async function refreshBalanceSilently() {
+    if (!currentUser) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/refresh-balance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: currentUser.phone })
+      });
+      const data = await res.json();
+      if (data.success) {
+        currentUser.balance = parseFloat(data.balance);
+        localStorage.setItem('swiftcrash_user', JSON.stringify(currentUser));
+        document.getElementById('userBalanceDisplay').innerText = 'KSH ' + parseFloat(currentUser.balance).toFixed(2);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function fetchNotificationsCount() {
+    if(!currentUser) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/notifications?phone=${currentUser.phone}`);
+      const data = await res.json();
+      if(data.success) {
+        const unreadCount = data.notifications.filter(n => !n.is_read).length;
+        const badge = document.querySelector('.notification-badge');
+        if (badge) {
+          badge.innerText = unreadCount;
+          badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+        }
+      }
+    } catch(e) {}
+  }
+
+  function openDeposit() {
+    if(!currentUser) return;
+    document.getElementById('depositPhone').value = currentUser.phone;
+    document.getElementById('depositCurrentBalance').innerText = `KSH ${parseFloat(currentUser.balance).toFixed(2)}`;
+    document.getElementById('depositPopup').style.display = 'flex';
+  }
+
+  async function submitDeposit() {
+    const amount = document.getElementById('depositAmount').value;
+    const spinner = document.getElementById('depositSpinner');
+    const btn = document.getElementById('submitDepositBtn');
+
+    if (amount < 1) { showNotification("Min deposit is KSH 1", "error"); return; }
+
+    spinner.style.display = 'block';
+    btn.style.display = 'none';
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: currentUser.phone, amount })
+      });
+      const data = await res.json();
+      spinner.style.display = 'none';
+      btn.style.display = 'block';
+
+      if (data.success) {
+        showNotification("Deposit request sent. Check M-Pesa.", "success");
+        setTimeout(() => document.getElementById('depositPopup').style.display='none', 2000);
+      } else {
+        showNotification(data.error || "Deposit failed", "error");
+      }
+    } catch (e) {
+      spinner.style.display = 'none';
+      btn.style.display = 'block';
+      showNotification("Error connecting to server", "error");
+    }
+  }
+
+  function openWithdraw() {
+    if(!currentUser) return;
+    document.getElementById('withdrawPhone').value = currentUser.phone;
+    document.getElementById('withdrawCurrentBalance').innerText = `KSH ${parseFloat(currentUser.balance).toFixed(2)}`;
+    document.getElementById('withdrawPopup').style.display = 'flex';
+  }
+
+  async function submitWithdraw() {
+    const amount = document.getElementById('withdrawAmount').value;
+    const spinner = document.getElementById('withdrawSpinner');
+    const btn = document.getElementById('submitWithdrawBtn');
+
+    if (amount < 100) { showNotification("Min withdrawal is KSH 100", "error"); return; }
+    if (parseFloat(amount) > parseFloat(currentUser.balance)) { showNotification("Insufficient balance", "error"); return; }
+
+    spinner.style.display = 'block';
+    btn.style.display = 'none';
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/withdraw`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: currentUser.phone, amount })
+      });
+      const data = await res.json();
+      spinner.style.display = 'none';
+      btn.style.display = 'block';
+
+      if (data.success) {
+        showNotification("Withdrawal successful", "success");
+        currentUser.balance = data.balance;
+        localStorage.setItem('swiftcrash_user', JSON.stringify(currentUser));
+        document.getElementById('userBalanceDisplay').innerText = `KSH ${parseFloat(currentUser.balance).toFixed(2)}`;
+        setTimeout(() => document.getElementById('withdrawPopup').style.display='none', 2000);
+      } else {
+        showNotification(data.error || "Withdrawal failed", "error");
+      }
+    } catch (e) {
+      spinner.style.display = 'none';
+      btn.style.display = 'block';
+      showNotification("Error connecting to server", "error");
+    }
+  }
+
+  async function openTransactionHistory() {
+    document.getElementById('page-transactions').style.display = 'flex';
+    document.getElementById('transactionsList').innerHTML = '<p style="text-align:center; color:#9ca3af;">Loading...</p>';
+    if(!currentUser) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/transactions-history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: currentUser.phone })
+      });
+      const data = await res.json();
+      if(data.success) {
+        allTransactions = data.transactions;
+        renderTransactions();
+      } else {
+        document.getElementById('transactionsList').innerHTML = '<p style="text-align:center; color:#ef4444;">Error loading transactions</p>';
+      }
+    } catch(e) {
+      document.getElementById('transactionsList').innerHTML = '<p style="text-align:center; color:#ef4444;">Error connecting to server</p>';
+    }
+  }
+
+  function setTxTab(tab) {
+    txFilterTab = tab;
+    document.querySelectorAll('#txTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderTransactions();
+  }
+
+  function filterTransactions() {
+    txSearchText = document.getElementById('txSearch').value.toLowerCase();
+    renderTransactions();
+  }
+
+  function renderTransactions() {
+    const list = document.getElementById('transactionsList');
+    let filtered = allTransactions;
+    if(txFilterTab !== 'all') {
+      if(txFilterTab === 'referral') {
+        filtered = filtered.filter(tx => tx.type.includes('referral'));
+      } else {
+        filtered = filtered.filter(tx => tx.type === txFilterTab);
+      }
+    }
+    if(txSearchText) {
+      filtered = filtered.filter(tx => 
+        tx.type.toLowerCase().includes(txSearchText) || 
+        (tx.amount && tx.amount.toString().includes(txSearchText)) ||
+        (tx.status && tx.status.toLowerCase().includes(txSearchText))
+      );
+    }
+    if (filtered.length === 0) {
+       list.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">No transactions found</div>';
+       return;
+    }
+    list.innerHTML = filtered.map(tx => `
+      <div style="background:#1f2937; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-left: 4px solid ${tx.type === 'deposit' ? '#22c55e' : (tx.type==='withdrawal' ? '#f59e0b' : '#3b82f6')}">
+        <div>
+          <div style="font-weight:bold; font-size:14px; text-transform:capitalize;">${tx.type.replace('_', ' ')}</div>
+          <div style="font-size:11px; color:#9ca3af;">${new Date(tx.created_at).toLocaleString()}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:bold; color:${tx.type === 'deposit' || tx.type === 'win' || tx.type.includes('referral') ? '#22c55e' : '#f59e0b'}">
+            ${tx.type === 'deposit' || tx.type === 'win' || tx.type.includes('referral') ? '+' : '-'}KSH ${parseFloat(tx.amount).toFixed(2)}
+          </div>
+          <div style="font-size:11px; color:${tx.status==='success'?'#22c55e':(tx.status==='failed'?'#ef4444':'#f59e0b')}; text-transform:capitalize;">${tx.status}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function openMyBets() {
+    document.getElementById('page-bets').style.display = 'flex';
+    document.getElementById('myBetsList').innerHTML = '<p style="text-align:center; color:#9ca3af;">Loading...</p>';
+    if(!currentUser) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/my-bets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: currentUser.phone })
+      });
+      const data = await res.json();
+      if(data.success) {
+        allBets = data.bets || [];
+        renderBets();
+      } else {
+        document.getElementById('myBetsList').innerHTML = '<p style="text-align:center; color:#ef4444;">Error loading bets</p>';
+      }
+    } catch(e) {
+      document.getElementById('myBetsList').innerHTML = '<p style="text-align:center; color:#ef4444;">Error connecting to server</p>';
+    }
+  }
+
+  function setBetsTab(tab) {
+    betsFilterTab = tab;
+    document.querySelectorAll('#betsTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderBets();
+  }
+
+  function renderBets() {
+    const list = document.getElementById('myBetsList');
+    let filtered = allBets;
+    if(betsFilterTab !== 'all') {
+      if(betsFilterTab === 'win') {
+        filtered = filtered.filter(b => b.status === 'cashed_out');
+      } else if(betsFilterTab === 'lose') {
+        filtered = filtered.filter(b => b.status === 'lost');
+      }
+    }
+    if (filtered.length === 0) {
+       list.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">No bets found</div>';
+       return;
+    }
+    list.innerHTML = filtered.map(bet => `
+      <div style="background:#1f2937; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-left: 4px solid ${bet.status === 'cashed_out' ? '#22c55e' : (bet.status==='lost' ? '#ef4444' : '#f59e0b')}">
+        <div>
+          <div style="font-weight:bold; font-size:14px; text-transform:capitalize;">${bet.status.replace('_', ' ')}</div>
+          <div style="font-size:11px; color:#9ca3af;">${new Date(bet.created_at).toLocaleString()}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:bold; color:#fff;">Bet: KSH ${parseFloat(bet.amount).toFixed(2)}</div>
+          ${bet.status === 'cashed_out' 
+            ? `<div style="font-size:12px; color:#22c55e; font-weight:bold;">Won: KSH ${(parseFloat(bet.amount) * parseFloat(bet.multiplier)).toFixed(2)} (${bet.multiplier}x)</div>` 
+            : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function openNotifications() {
+    document.getElementById('page-notifications').style.display = 'flex';
+    document.getElementById('notificationsList').innerHTML = '<p style="text-align:center; color:#9ca3af;">Loading...</p>';
+    if(!currentUser) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/notifications?phone=${currentUser.phone}`);
+      const data = await res.json();
+      if(data.success) {
+        allNotifications = data.notifications || [];
+        renderNotifications();
+        
+        fetch(`${BACKEND_URL}/api/notifications/mark-read`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({phone: currentUser.phone})
+        });
+        const badge = document.querySelector('.notification-badge');
+        if (badge) badge.style.display = 'none';
+      } else {
+        document.getElementById('notificationsList').innerHTML = '<p style="text-align:center; color:#ef4444;">Error loading notifications</p>';
+      }
+    } catch(e) {
+      document.getElementById('notificationsList').innerHTML = '<p style="text-align:center; color:#ef4444;">Error connecting to server</p>';
+    }
+  }
+
+  function setNotifTab(tab) {
+    notifFilterTab = tab;
+    document.querySelectorAll('#notifTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderNotifications();
+  }
+
+  function renderNotifications() {
+    const list = document.getElementById('notificationsList');
+    let filtered = allNotifications;
+    if(notifFilterTab !== 'all') {
+      if(notifFilterTab === 'alert') {
+        filtered = filtered.filter(n => n.message.toLowerCase().includes('alert') || !n.message.toLowerCase().includes('deposit') && !n.message.toLowerCase().includes('withdraw'));
+      } else {
+        filtered = filtered.filter(n => n.message.toLowerCase().includes(notifFilterTab));
+      }
+    }
+    if (filtered.length === 0) {
+       list.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">No notifications found</div>';
+       return;
+    }
+    list.innerHTML = filtered.map(n => `
+      <div style="background: ${n.is_read ? '#1f2937' : '#1e293b'}; padding: 10px; border-radius: 5px; margin-bottom: 8px; font-size: 13px; border-left: 3px solid ${n.is_read ? '#3b82f6' : '#f59e0b'};">
+        ${n.message}
+        <div style="font-size: 10px; color: #9ca3af; margin-top: 5px;">${new Date(n.created_at).toLocaleString()}</div>
+      </div>
+    `).join('');
+  }
+
+  async function openReferralHistory() {
+    document.getElementById('page-referral').style.display = 'flex';
+    document.getElementById('referralsList').innerHTML = '<p style="text-align:center; color:#9ca3af;">Loading...</p>';
+    if(!currentUser) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/referrals?phone=${currentUser.phone}`);
+      const data = await res.json();
+      if(data.success) {
+        document.getElementById('refCount').innerText = data.referrals.length;
+        document.getElementById('refActive').innerText = data.active_referrals || 0;
+        document.getElementById('refEarned').innerText = data.earned_amount || 0;
+        
+        const list = document.getElementById('referralsList');
+        if (data.referrals.length === 0) {
+          list.innerHTML = '<div style="text-align:center; color:#9ca3af; font-size:12px; margin-top:20px;">No referrals yet</div>';
+        } else {
+          list.innerHTML = data.referrals.map(r => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:#1f2937; border-radius:8px; margin-bottom:8px;">
+              <div>
+                <div style="color:white; font-weight:bold; font-size:14px;">${r.username}</div>
+                <div style="color:#9ca3af; font-size:11px;">${new Date(r.created_at).toLocaleDateString()}</div>
+              </div>
+              <div style="padding:5px 10px; border-radius:4px; font-size:12px; font-weight:bold; background: ${r.status==='active' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(156, 163, 175, 0.2)'}; color: ${r.status==='active' ? '#22c55e' : '#9ca3af'};">
+                ${r.status==='active' ? 'Active' : 'Pending'}
+              </div>
+            </div>
+          `).join('');
+        }
+      } else {
+        document.getElementById('referralsList').innerHTML = '<p style="text-align:center; color:#ef4444;">Error loading referrals</p>';
+      }
+    } catch(e) {
+      document.getElementById('referralsList').innerHTML = '<p style="text-align:center; color:#ef4444;">Error connecting to server</p>';
+    }
+  }
+
+  function copyReferral() {
+    if (!currentUser) return;
+    const link = `https://swiftcrash.com/?ref=${currentUser.username}`;
+    navigator.clipboard.writeText(link).then(() => showNotification('Referral link copied!'));
+  }
+
+  async function submitQuickChangePassword() {
+    const newPin = document.getElementById('newPasswordInput').value;
+    const confirmPin = document.getElementById('confirmPasswordInput').value;
+    
+    if (!newPin || !confirmPin) { showNotification("Fill all fields", "error"); return; }
+    if (newPin !== confirmPin) { showNotification("Passwords do not match", "error"); return; }
+    if (newPin.length !== 6) { showNotification("PIN must be 6 digits", "error"); return; }
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/change-pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: currentUser.phone, oldPin: currentUser.pin, newPin })
+      });
+      const data = await res.json();
+      if(data.success) {
+        showNotification("Password updated successfully!");
+        currentUser.pin = newPin;
+        localStorage.setItem('swiftcrash_user', JSON.stringify(currentUser));
+        document.getElementById('newPasswordInput').value = '';
+        document.getElementById('confirmPasswordInput').value = '';
+        setTimeout(() => document.getElementById('page-password').style.display='none', 2000);
+      } else {
+        showNotification(data.error || "Update failed", "error");
+      }
+    } catch (e) {
+      showNotification("Error connecting to server", "error");
+    }
+  }
+
+  function signOut() {
+    localStorage.removeItem('swiftcrash_user');
+    window.location.href = 'index.html';
+  }
+
+  function toggleAccordion(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function openDeleteAccount() {
+    if(!currentUser) return;
+    document.getElementById('deleteUsername').value = currentUser.username;
+    document.getElementById('deletePhone').value = currentUser.phone;
+    document.getElementById('deletePin').value = '';
+    document.getElementById('deleteError').style.display = 'none';
+    document.getElementById('deleteAccountPopup').style.display = 'flex';
+  }
+
+  async function submitDeleteAccount() {
+    const pin = document.getElementById('deletePin').value;
+    const errEl = document.getElementById('deleteError');
+    errEl.style.display = 'none';
+
+    if(!pin) { errEl.innerText="Please enter your PIN"; errEl.style.display='block'; return; }
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/delete-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: currentUser.phone, pin })
+      });
+      const data = await res.json();
+      if(data.success) {
+        showNotification("Account deleted successfully");
+        document.getElementById('deleteAccountPopup').style.display = 'none';
+        localStorage.removeItem('swiftcrash_user');
+        window.location.href = 'index.html';
+      } else {
+        errEl.innerText = data.error || "Failed to delete account";
+        errEl.style.display = 'block';
+      }
+    } catch(e) { errEl.innerText="Network error"; errEl.style.display='block'; }
+  }
+
+  document.addEventListener('DOMContentLoaded', initMenu);
+
+</script>
+
+  
+  <!-- Delete Account Popup -->
+  <div class="popup-overlay" id="deleteAccountPopup">
+    <div class="popup-content">
+      <span class="popup-close" onclick="document.getElementById('deleteAccountPopup').style.display='none'">×</span>
+      <h2 style="margin-top:0; color:#ef4444;">Delete Account</h2>
+      <p style="font-size:12px; color:#9ca3af; margin-bottom:15px;">Warning: This action is permanent and cannot be undone.</p>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" class="form-control" id="deleteUsername" readonly style="color:#9ca3af; background:#1f2937;">
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="text" class="form-control" id="deletePhone" readonly style="color:#9ca3af; background:#1f2937;">
+      </div>
+      <div class="form-group">
+        <label>Enter PIN to Confirm</label>
+        <input type="password" class="form-control" id="deletePin" maxlength="6">
+      </div>
+      <div class="error-msg" id="deleteError" style="color:#ef4444; font-size:12px; margin-bottom:10px; display:none;"></div>
+      <button class="btn-submit" style="background:#ef4444;" onclick="submitDeleteAccount()">Delete My Account</button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <!-- Deposit Popup -->
+  <div class="popup-overlay" id="depositPopup">
+    <div class="popup-content">
+      <span class="popup-close" onclick="document.getElementById('depositPopup').style.display='none'">×</span>
+      <h2 style="margin-top:0;">Deposit via M-Pesa</h2>
+      <div class="form-group">
+        <label>M-Pesa Number</label>
+        <input type="text" class="form-control" id="depositPhone" readonly style="color:#9ca3af; background:#1f2937;">
+      </div>
+      <div class="form-group">
+        <label>Amount (Min KSH 1)</label>
+        <input type="number" class="form-control" id="depositAmount" value="1" min="1">
+      </div>
+      <div class="bet-presets">
+        <button class="preset" onclick="document.getElementById('depositAmount').value=100">100</button>
+        <button class="preset" onclick="document.getElementById('depositAmount').value=200">200</button>
+        <button class="preset" onclick="document.getElementById('depositAmount').value=500">500</button>
+        <button class="preset" onclick="document.getElementById('depositAmount').value=1000">1K</button>
+        <button class="preset" onclick="document.getElementById('depositAmount').value=5000">5K</button>
+      </div>
+      <p style="font-size: 14px; color: #9ca3af; text-align:center; margin-bottom: 15px;">Current Balance: <strong id="depositCurrentBalance" style="color:white;">KSH 0.00</strong></p>
+      
+      <div class="spinner" id="depositSpinner"></div>
+      <button class="btn-submit" id="submitDepositBtn" style="background:#22c55e;" onclick="submitDeposit()">Deposit</button>
+    </div>
+  </div>
+
+  <!-- Withdraw Popup -->
+  <div class="popup-overlay" id="withdrawPopup">
+    <div class="popup-content">
+      <span class="popup-close" onclick="document.getElementById('withdrawPopup').style.display='none'">×</span>
+      <h2 style="margin-top:0;">Withdraw to M-Pesa</h2>
+      <div class="form-group">
+        <label>M-Pesa Number</label>
+        <input type="text" class="form-control" id="withdrawPhone" readonly style="color:#9ca3af; background:#1f2937;">
+      </div>
+      <div class="form-group">
+        <label>Amount (Min KSH 100)</label>
+        <input type="number" class="form-control" id="withdrawAmount" value="100" min="100">
+      </div>
+      <div class="bet-presets">
+        <button class="preset" onclick="document.getElementById('withdrawAmount').value=100">100</button>
+        <button class="preset" onclick="document.getElementById('withdrawAmount').value=500">500</button>
+        <button class="preset" onclick="document.getElementById('withdrawAmount').value=1000">1K</button>
+        <button class="preset" onclick="document.getElementById('withdrawAmount').value=2000">2K</button>
+        <button class="preset" onclick="document.getElementById('withdrawAmount').value=5000">5K</button>
+      </div>
+      <p style="font-size: 14px; color: #9ca3af; text-align:center; margin-bottom: 15px;">Current Balance: <strong id="withdrawCurrentBalance" style="color:white;">KSH 0.00</strong></p>
+      
+      <div class="spinner" id="withdrawSpinner"></div>
+      <button class="btn-submit" id="submitWithdrawBtn" style="background:#f59e0b;" onclick="submitWithdraw()">Withdraw</button>
+    </div>
+  </div>
+
+  <!-- Transaction History Page -->
+  <div class="page-popup" id="page-transactions">
+    <div class="page-header">
+      <button class="page-back-btn" onclick="document.getElementById('page-transactions').style.display='none'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <h2 class="page-title">Transaction History</h2>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="page-content">
+      <input type="text" class="search-box" id="txSearch" placeholder="Search user code or description..." oninput="filterTransactions()">
+      <div class="tabs-container" id="txTabs">
+        <button class="tab-btn active" onclick="setTxTab('all')">All</button>
+        <button class="tab-btn" onclick="setTxTab('deposit')">Deposits</button>
+        <button class="tab-btn" onclick="setTxTab('withdrawal')">Withdrawals</button>
+        <button class="tab-btn" onclick="setTxTab('referral')">Referrals</button>
+      </div>
+      <div id="transactionsList"></div>
+    </div>
+  </div>
+
+  <!-- Users Bets Page -->
+  <div class="page-popup" id="page-bets">
+    <div class="page-header">
+      <button class="page-back-btn" onclick="document.getElementById('page-bets').style.display='none'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <h2 class="page-title">My Bets</h2>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="page-content">
+      <div class="tabs-container" id="betsTabs">
+        <button class="tab-btn active" onclick="setBetsTab('all')">All</button>
+        <button class="tab-btn" onclick="setBetsTab('win')">Win</button>
+        <button class="tab-btn" onclick="setBetsTab('lose')">Lose</button>
+      </div>
+      <div id="myBetsList"></div>
+      <div style="margin-top: 20px;">
+        <button style="width:100%; padding:15px; border-radius:8px; background:#22c55e; color:white; font-weight:bold; border:none; cursor:pointer;" onclick="window.location.href='index.html'">PLACE BET</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Page -->
+  <div class="page-popup" id="page-notifications">
+    <div class="page-header">
+      <button class="page-back-btn" onclick="document.getElementById('page-notifications').style.display='none'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <h2 class="page-title">Notifications</h2>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="page-content">
+      <div class="tabs-container" id="notifTabs">
+        <button class="tab-btn active" onclick="setNotifTab('all')">All</button>
+        <button class="tab-btn" onclick="setNotifTab('deposit')">Deposits</button>
+        <button class="tab-btn" onclick="setNotifTab('withdrawal')">Withdrawal</button>
+        <button class="tab-btn" onclick="setNotifTab('alert')">Alerts</button>
+      </div>
+      <div id="notificationsList"></div>
+    </div>
+  </div>
+
+  <!-- Refer and Earn Page -->
+  <div class="page-popup" id="page-referral">
+    <div class="page-header">
+      <button class="page-back-btn" onclick="document.getElementById('page-referral').style.display='none'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <h2 class="page-title">Refer and Earn</h2>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="page-content">
+      <div style="text-align:center; padding:20px 0;">
+        <h3 style="color:#facc15; margin:0 0 10px 0;">Earn KSH 300.00</h3>
+        <p style="color:#9ca3af; font-size:14px;">Invite friends and earn for every active referral.</p>
+        <p style="color:#22c55e; font-size:13px; margin-top:10px; font-weight:bold;">Users earn KSH 29 for each user they refer and 5% lifetime reward commission for each user who deposits.</p>
+      </div>
+      <div style="margin-bottom: 10px; color: white; font-weight: bold; font-size: 14px; text-align: center;">Your Referral Code: <span id="referralCodeText" style="color: #facc15;">xxxx</span></div>
+      <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+        <span id="referralLinkText" style="font-size:12px; color:#9ca3af; word-break:break-all;">https://swiftcrash.com/?ref=xxxx</span>
+        <button style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="copyReferral()">Copy</button>
+      </div>
+      <div class="social-row">
+        <a href="#" class="social-btn social-ig"><i class="fab fa-instagram fa-lg"></i></a>
+        <a href="#" class="social-btn social-fb"><i class="fab fa-facebook-f fa-lg"></i></a>
+        <a href="#" class="social-btn social-x"><i class="fa-brands fa-x-twitter fa-lg"></i></a>
+        <a href="#" class="social-btn social-wa" style="background:#25D366;"><i class="fab fa-whatsapp fa-lg"></i></a>
+      </div>
+      
+      <div style="background: #1f2937; padding: 15px; border-radius: 10px; margin: 20px 0; display: flex; justify-content: space-between;">
+        <div style="text-align: center;">
+          <div style="color: #9ca3af; font-size: 12px; margin-bottom: 5px;">Total Referrals</div>
+          <div style="color: #facc15; font-size: 20px; font-weight: bold;" id="refCount">0</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="color: #9ca3af; font-size: 12px; margin-bottom: 5px;">Active (Played)</div>
+          <div style="color: #22c55e; font-size: 20px; font-weight: bold;" id="refActive">0</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="color: #9ca3af; font-size: 12px; margin-bottom: 5px;">Earned</div>
+          <div style="color: #3b82f6; font-size: 20px; font-weight: bold;" id="refEarned">0</div>
+        </div>
+      </div>
+      <h3 style="font-size:16px;">Referral History</h3>
+      <div id="referralsList"></div>
+    </div>
+  </div>
+
+  <!-- Support Page -->
+  <div class="page-popup" id="page-support">
+    <div class="page-header">
+      <button class="page-back-btn" onclick="document.getElementById('page-support').style.display='none'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <h2 class="page-title">Support</h2>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="page-content">
+      <p style="color:#9ca3af; font-size:14px; margin-bottom:20px;">Need help? Contact our support team.</p>
+      <a href="https://wa.me/254723308753" class="comm-btn comm-whatsapp" style="margin-bottom:15px; display:flex;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z"/><path d="M14 14a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-1 0v1Z"/></svg>
+        WhatsApp Chat
+      </a>
+      <a href="#" class="comm-btn" style="background:#1877F2; margin-bottom:15px; display:flex;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        Facebook Messenger
+      </a>
+      <a href="mailto:support@swiftcrash.com" class="comm-btn comm-call" style="margin-bottom:15px; display:flex;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        Email Support
+      </a>
+    </div>
+  </div>
+
+  <!-- Change Password Page -->
+  <div class="page-popup" id="page-password">
+    <div class="page-header">
+      <button class="page-back-btn" onclick="document.getElementById('page-password').style.display='none'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <h2 class="page-title">Change Password</h2>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="page-content">
+      <div class="card">
+        <div class="form-group" style="margin-bottom:15px;">
+          <label style="display:block; margin-bottom:5px; color:#9ca3af; font-size:12px;">New Password (6 digits)</label>
+          <input type="password" id="newPasswordInput" class="search-box" placeholder="Enter new PIN" maxlength="6">
+        </div>
+        <div class="form-group" style="margin-bottom:15px;">
+          <label style="display:block; margin-bottom:5px; color:#9ca3af; font-size:12px;">Confirm Password</label>
+          <input type="password" id="confirmPasswordInput" class="search-box" placeholder="Confirm new PIN" maxlength="6">
+        </div>
+        <button style="width:100%; padding:15px; border-radius:8px; background:#3b82f6; color:white; font-weight:bold; border:none; cursor:pointer;" onclick="submitQuickChangePassword()">Update Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terms and Conditions Popup -->
+  <div class="page-popup" id="page-terms">
+    <div class="page-header">
+      <button class="page-back-btn" onclick="document.getElementById('page-terms').style.display='none'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <h2 class="page-title">Terms & Conditions</h2>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="page-content" style="scroll-behavior: smooth;">
+      <h3 style="color:#facc15;">1. Introduction</h3>
+      <p style="color:#9ca3af; font-size:14px; line-height:1.5;">Welcome to Swiftcrash. By using our platform, you agree to these Terms and Conditions. Please read them carefully.</p>
+      <h3 style="color:#facc15;">2. Account Registration</h3>
+      <p style="color:#9ca3af; font-size:14px; line-height:1.5;">You must be 18 years or older to create an account. You are responsible for keeping your login credentials secure.</p>
+      <h3 style="color:#facc15;">3. Deposits and Withdrawals</h3>
+      <p style="color:#9ca3af; font-size:14px; line-height:1.5;">All transactions are processed in KSH via MPESA. Minimum limits apply.</p>
+      <h3 style="color:#facc15;">4. Gameplay and Fairness</h3>
+      <p style="color:#9ca3af; font-size:14px; line-height:1.5;">Swiftcrash uses a provably fair system. Multipliers and crash points are generated independently and transparently.</p>
+    </div>
+  </div>
+
+  <!-- Privacy Policy Popup -->
+  <div class="page-popup" id="page-privacy">
+    <div class="page-header">
+      <button class="page-back-btn" onclick="document.getElementById('page-privacy').style.display='none'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <h2 class="page-title">Privacy Policy</h2>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="page-content" style="scroll-behavior: smooth;">
+      <h3 style="color:#facc15;">1. Information We Collect</h3>
+      <p style="color:#9ca3af; font-size:14px; line-height:1.5;">We collect your phone number, username, and transaction data to provide our services and ensure compliance.</p>
+      <h3 style="color:#facc15;">2. How We Use Information</h3>
+      <p style="color:#9ca3af; font-size:14px; line-height:1.5;">Your data is used to process payments, manage your account, and improve our services.</p>
+      <h3 style="color:#facc15;">3. Data Security</h3>
+      <p style="color:#9ca3af; font-size:14px; line-height:1.5;">We implement standard security protocols to protect your personal data against unauthorized access.</p>
+    </div>
+  </div>
+
+  <!-- Responsible Gaming Popup -->
+  <div class="page-popup" id="page-responsible">
+    <div class="page-header">
+      <button class="page-back-btn" onclick="document.getElementById('page-responsible').style.display='none'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <h2 class="page-title">Responsible Gaming</h2>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="page-content" style="scroll-behavior: smooth;">
+      <h3 style="color:#facc15;">1. Play for Fun</h3>
+      <p style="color:#9ca3af; font-size:14px; line-height:1.5;">Gambling should be entertaining and not seen as a way to make money. Always play within your limits.</p>
+      <h3 style="color:#facc15;">2. Set Limits</h3>
+      <p style="color:#9ca3af; font-size:14px; line-height:1.5;">Keep track of the time and money you spend. Do not chase your losses.</p>
+      <h3 style="color:#facc15;">3. Need Help?</h3>
+      <p style="color:#9ca3af; font-size:14px; line-height:1.5;">If you feel gambling is affecting your life negatively, seek help immediately. Visit www.responsiblegambling.or.ke or contact our support.</p>
+    </div>
+  </div>
+
+</body>
+      </html>
