@@ -911,11 +911,6 @@
              </div>
              <div id="adminChatMessages" style="background:#111827; border:1px solid #374151; padding:10px; height:300px; overflow-y:auto; border-radius:5px; margin-bottom:10px; display:flex; flex-direction:column; gap:10px;">
              </div>
-             <div id="adminReplyPreview" style="display:none; background:#374151; padding:10px; border-radius:5px; margin-bottom:10px; border-left:4px solid #a855f7; position:relative;">
-               <div style="font-size:12px; font-weight:bold; color:#a855f7; margin-bottom:4px;" id="adminReplyUsername">Username</div>
-               <div style="font-size:13px; color:#d1d5db; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="adminReplyText">Message preview</div>
-               <button onclick="clearAdminReply()" style="position:absolute; top:5px; right:5px; background:none; border:none; color:#9ca3af; cursor:pointer; font-size:16px;">×</button>
-             </div>
              <div style="display:flex; gap:10px;">
                <input type="text" id="adminChatInput" class="form-control" placeholder="Admin reply...">
                <button class="btn-submit" style="width:auto; margin:0;" onclick="sendAdminChat()">Send</button>
@@ -3049,16 +3044,6 @@
         scrollDown.style.display = isNearBottom ? 'none' : 'flex';
       }
 
-      let adminReplyToUsername = null;
-      let adminReplyToMessage = null;
-
-      function clearAdminReply() {
-        adminReplyToUsername = null;
-        adminReplyToMessage = null;
-        document.getElementById('adminReplyPreview').style.display = 'none';
-        document.getElementById('adminChatInput').focus();
-      }
-
       function scrollToBottom() {
         const container = document.getElementById('chatMessages');
         container.scrollTop = container.scrollHeight;
@@ -3091,28 +3076,10 @@
                 let endX = e.changedTouches[0].clientX;
                 let diffX = endX - startX;
                 if (diffX > 50) {
-                    const isAdminChat = item.closest('#adminChatMessages') !== null;
-                    if (isAdminChat) {
-                        const msgEl = item.querySelector('.chat-bubble');
-                        const msgText = msgEl ? msgEl.innerText.trim() : '';
-                        adminReplyToUsername = username;
-                        adminReplyToMessage = msgText;
-                        
-                        const replyPreview = document.getElementById('adminReplyPreview');
-                        if (replyPreview) {
-                            document.getElementById('adminReplyUsername').innerText = username;
-                            document.getElementById('adminReplyText').innerText = msgText;
-                            replyPreview.style.display = 'block';
-                        }
-                        
-                        const adminInput = document.getElementById('adminChatInput');
-                        if (adminInput) adminInput.focus();
-                    } else {
-                        const input = document.getElementById('chatInput');
-                        if (input) {
-                            input.value = `@${username} ` + input.value;
-                            input.focus();
-                        }
+                    const input = document.getElementById('chatInput');
+                    if (input) {
+                        input.value = `@${username} ` + input.value;
+                        input.focus();
                     }
                 }
                 item.style.transition = 'transform 0.2s ease';
@@ -3132,13 +3099,8 @@
           if(m.type === 'cashrain') {
             const claimedRatio = m.current_claims + ' / ' + m.max_claims;
             const isDistributed = m.current_claims >= m.max_claims;
-            const alreadyClaimed = claimedNotifications && claimedNotifications.has(m.id);
-            let bg = isDistributed ? '#374151' : '#166534';
-            let btnText = isDistributed ? 'Distributed' : 'Claim';
-            if (alreadyClaimed && !isDistributed) {
-              btnText = 'Claimed';
-              bg = '#4b5563';
-            }
+            const bg = isDistributed ? '#374151' : '#166534';
+            const btnText = isDistributed ? 'Distributed' : 'Claim';
             container.innerHTML += `
               <div style="background:${bg}; border-radius:12px; padding:15px; margin-bottom:5px;">
                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -3146,8 +3108,8 @@
                    <span style="color:#facc15; font-weight:bold;">${m.amount} KES</span>
                  </div>
                  <div style="font-size:12px; color:#d1d5db; margin-bottom:10px;">Available for ${m.max_claims} users (${claimedRatio} claimed)</div>
-                 <button ${isDistributed || alreadyClaimed ? 'disabled' : ''} onclick="claimRain(${m.id})" style="width:100%; padding:10px; border-radius:8px; border:none; background:${bg}; color:white; font-weight:bold; cursor:${isDistributed || alreadyClaimed ? 'not-allowed' : 'pointer'};">
-                   ${btnText}
+                 <button ${isDistributed ? 'disabled' : ''} onclick="claimRain(${m.id})" style="width:100%; padding:10px; border-radius:8px; border:none; background:${isDistributed ? '#4b5563' : '#22c55e'}; color:white; font-weight:bold; cursor:${isDistributed ? 'not-allowed' : 'pointer'};">
+                   ${isDistributed ? 'Fully Claimed' : 'Claim Now'}
                  </button>
                  ${isAdmin ? `<button onclick="deleteChat(${m.id})" style="margin-top:5px; padding:5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; width:100%; font-size:12px;">Delete</button>` : ''}
               </div>
@@ -3167,10 +3129,6 @@
                     <span class="chat-username ${isCaptain ? 'admin' : ''}" style="color:${finalColor}">${name}</span>
                     <span class="chat-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})}</span>
                   </div>
-                  ${m.reply_to_username ? `<div style="background:rgba(0,0,0,0.2); padding:5px; border-left:3px solid #a855f7; border-radius:3px; margin-bottom:5px; font-size:12px;">
-                    <div style="color:#a855f7; font-weight:bold;">${m.reply_to_username}</div>
-                    <div style="color:#d1d5db; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.reply_to_message || ''}</div>
-                  </div>` : ''}
                   <div class="chat-bubble ${isCaptain ? 'admin' : ''}">
                     ${m.message}
                   </div>
@@ -3399,24 +3357,14 @@
         if(!msg) return;
         input.value = '';
         try {
-          const payload = { message: msg };
-          if (typeof adminReplyToUsername !== 'undefined' && adminReplyToUsername) {
-            payload.replyToUsername = adminReplyToUsername;
-            payload.replyToMessage = adminReplyToMessage;
-          }
-          
           const res = await fetch(BACKEND_URL + '/admin/chat/send', {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'Authorization': adminPwd},
-            body: JSON.stringify(payload)
+            body: JSON.stringify({message: msg})
           });
           const data = await res.json();
-          if(!data.success) {
-            alert(data.error);
-          } else {
-            if (typeof clearAdminReply === 'function') clearAdminReply();
-            fetchChats();
-          }
+          if(!data.success) alert(data.error);
+          else fetchChats();
         } catch(e) { }
       }
 
