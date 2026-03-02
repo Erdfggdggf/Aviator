@@ -624,7 +624,206 @@
        await refreshBalanceSilently();
        setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
     }
-  </script>
+  
+      function togglePinVisibility(id) {
+        const input = document.getElementById(id);
+        if (input.type === 'password') {
+          input.type = 'text';
+        } else {
+          input.type = 'password';
+        }
+      }
+      function validateLogin() {
+        const phone = document.getElementById('loginPhone').value;
+        const pin = document.getElementById('loginPin').value;
+        const btn = document.querySelector('#loginForm .btn-submit');
+        if (phone.length >= 9 && pin.length === 6) {
+          btn.style.opacity = '1';
+          btn.disabled = false;
+        } else {
+          btn.style.opacity = '0.5';
+          btn.disabled = true;
+        }
+      }
+      function validateSignup() {
+        const username = document.getElementById('signupUsername').value;
+        const phone = document.getElementById('signupPhone').value;
+        const pin = document.getElementById('signupPin').value;
+        const pinConfirm = document.getElementById('signupPinConfirm').value;
+        const btn = document.querySelector('#signupForm .btn-submit');
+        if (username.length > 2 && phone.length >= 9 && pin.length === 6 && pin === pinConfirm) {
+          btn.style.opacity = '1';
+          btn.disabled = false;
+        } else {
+          btn.style.opacity = '0.5';
+          btn.disabled = true;
+        }
+      }
+
+      async function likeMessage(chatId) {
+        if(!currentUser) return;
+        try {
+          const res = await fetch(BACKEND_URL + '/chat/like', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone: currentUser.phone, chatId })
+          });
+          const data = await res.json();
+          if (data.success) {
+            fetchChats();
+          } else {
+            showTopNotification(data.error || 'Failed to like');
+          }
+        } catch(e) {}
+      }
+      
+      function showReplyInput(chatId, username) {
+        const container = document.getElementById('reply-container-' + chatId);
+        if (!container) return;
+        if (container.innerHTML.trim() !== '') { container.innerHTML = ''; return; }
+        container.innerHTML = `
+          <div style="display:flex; gap:5px; margin-top:5px; margin-bottom:5px;">
+            <input type="text" id="reply-input-${chatId}" placeholder="Reply to ${username}..." style="flex:1; padding:5px 10px; border-radius:15px; border:1px solid #374151; background:#1f2937; color:white; font-size:12px; outline:none;" onkeypress="if(event.key === 'Enter') sendReply(${chatId})">
+            <button onclick="sendReply(${chatId})" style="background:#22c55e; color:white; border:none; padding:5px 10px; border-radius:15px; font-weight:bold; cursor:pointer; font-size:12px;">Send</button>
+          </div>
+        `;
+      }
+      
+      function toggleReplies(chatId) {
+        const container = document.getElementById('replies-list-' + chatId);
+        if (container) {
+          container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        }
+      }
+
+      async function sendReply(chatId) {
+        if(!currentUser) return;
+        const input = document.getElementById('reply-input-' + chatId);
+        if(!input || !input.value.trim()) return;
+        
+        try {
+          const res = await fetch(BACKEND_URL + (currentUser.isAdmin ? '/admin/chat/reply' : '/chat/reply'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(currentUser.isAdmin ? {'Authorization': '3462Abel@#'} : {})
+            },
+            body: JSON.stringify({
+              phone: currentUser.phone,
+              message: input.value.trim(),
+              replyToId: chatId
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            fetchChats();
+          } else {
+            showTopNotification(data.error || 'Failed to send reply');
+          }
+        } catch(e) {}
+      }
+      
+      function showTopNotification(msg) {
+        const notif = document.createElement('div');
+        notif.style.position = 'absolute';
+        notif.style.top = '10px';
+        notif.style.left = '50%';
+        notif.style.transform = 'translateX(-50%)';
+        notif.style.background = '#ef4444';
+        notif.style.color = 'white';
+        notif.style.padding = '8px 15px';
+        notif.style.borderRadius = '20px';
+        notif.style.fontSize = '12px';
+        notif.style.fontWeight = 'bold';
+        notif.style.zIndex = '9999';
+        notif.style.boxShadow = '0 4px 10px rgba(0,0,0,0.5)';
+        notif.innerText = msg;
+        
+        document.getElementById('chatPopup').appendChild(notif);
+        setTimeout(() => {
+          if (notif.parentNode) notif.parentNode.removeChild(notif);
+        }, 3000);
+      }
+
+      async function adminUpdateUser() {
+        const oldUsername = document.getElementById('adminTargetUsername').value;
+        const newUsername = document.getElementById('adminNewUsername').value;
+        const newPhone = document.getElementById('adminNewPhone').value;
+        const newPin = document.getElementById('adminNewPin').value;
+        if(!oldUsername) return alert("Target username required");
+        
+        try {
+          const res = await fetch(BACKEND_URL + '/admin/update-user', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': '3462Abel@#'},
+            body: JSON.stringify({ oldUsername, newUsername, newPhone, newPin })
+          });
+          const data = await res.json();
+          if(data.success) {
+            alert('User updated');
+          } else alert(data.error);
+        } catch(e) { alert('Error'); }
+      }
+      
+      async function adminLimitUser(feature, status) {
+        const username = document.getElementById('adminTargetUsername').value;
+        if(!username) return alert("Target username required");
+        
+        try {
+          const res = await fetch(BACKEND_URL + '/admin/limit-feature', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': '3462Abel@#'},
+            body: JSON.stringify({ username, feature, status })
+          });
+          const data = await res.json();
+          if(data.success) {
+            alert(feature + ' status updated');
+          } else alert(data.error);
+        } catch(e) { alert('Error'); }
+      }
+      
+      async function adminDeleteTx() {
+        const transactionId = document.getElementById('adminDelTxId').value;
+        if(!transactionId) return alert("Tx ID required");
+        
+        try {
+          const res = await fetch(BACKEND_URL + '/admin/delete-transaction', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': '3462Abel@#'},
+            body: JSON.stringify({ transactionId })
+          });
+          const data = await res.json();
+          if(data.success) {
+            alert('Transaction deleted');
+          } else alert(data.error);
+        } catch(e) { alert('Error'); }
+      }
+
+      async function openAdminNotifs() {
+        document.getElementById('adminNotificationsPopup').style.display='flex';
+        try {
+          const res = await fetch(BACKEND_URL + '/admin/notifications', {
+            headers: { 'Authorization': '3462Abel@#' }
+          });
+          const data = await res.json();
+          const list = document.getElementById('adminFullNotificationsList');
+          if (data.success && data.notifications.length > 0) {
+            list.innerHTML = data.notifications.map(n => `
+              <div style="padding:10px; border-bottom:1px solid #374151;">
+                <div style="font-weight:bold; color:#fbbf24;">${n.phone}</div>
+                <div style="font-size:13px; color:#d1d5db;">${n.message}</div>
+                <div style="font-size:11px; color:#6b7280;">${new Date(n.created_at).toLocaleString()}</div>
+              </div>
+            `).join('');
+          } else {
+            list.innerHTML = '<p style="text-align:center; color:#9ca3af;">No notifications found.</p>';
+          }
+        } catch(e) {
+          document.getElementById('adminFullNotificationsList').innerHTML = '<p style="text-align:center; color:#ef4444;">Failed to load.</p>';
+        }
+      }
+
+</script>
 
   <!-- Odds History -->
   <div class="odds-history" id="oddsHistory">
@@ -1065,18 +1264,23 @@
       <!-- Login Form -->
       <div id="loginForm">
         <div style="background: linear-gradient(to right, #4c1d95, #7e22ce); color: white; padding: 20px; text-align: center; font-style: italic; font-weight: bold; border-radius: 8px; margin-bottom: 20px; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-        WELCOME BACK<br><span style="font-size: 14px; opacity: 0.8; font-weight: normal; letter-spacing: 2px; font-style: normal;">BONUS</span>
+          <svg style="width:40px;height:40px;margin-bottom:10px;animation:spinBg 3s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><br>
+          <span style="font-size: 22px;">Welcome to Swiftcrash!</span><br>
+          <span style="font-size: 14px; opacity: 0.9; font-weight: normal;">Ready to multiply your earnings? Log in now.</span>
         </div>
         <div class="form-group">
           <label>Phone Number (07xxx)</label>
           <div style="display:flex; background:#111827; border:1px solid #374151; border-radius:5px;">
             <span style="padding:10px; color:#9ca3af; border-right:1px solid #374151;">+254</span>
-            <input type="text" class="form-control" style="border:none;" id="loginPhone" placeholder="07...">
+            <input type="text" class="form-control" style="border:none;" id="loginPhone" placeholder="07..." oninput="validateLogin()">
           </div>
         </div>
         <div class="form-group">
           <label>PIN (6 digits)</label>
-          <input type="password" class="form-control" id="loginPin" maxlength="6">
+          <div style="position:relative;">
+            <input type="password" class="form-control" id="loginPin" maxlength="6" oninput="validateLogin()">
+            <svg onclick="togglePinVisibility('loginPin')" style="position:absolute; right:10px; top:12px; cursor:pointer; color:#9ca3af;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
           <a href="#" style="font-size:12px; color:#3b82f6; float:right; margin-top:5px; text-decoration:none;" onclick="showForgotPin()">Forgot PIN?</a>
         </div>
         <div class="error-msg" id="loginError"></div>
@@ -1088,7 +1292,9 @@
       <!-- Signup Form -->
       <div id="signupForm" style="display:none;">
         <div style="background: linear-gradient(to right, #4c1d95, #7e22ce); color: white; padding: 20px; text-align: center; font-style: italic; font-weight: bold; border-radius: 8px; margin-bottom: 20px; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-        JOIN THE ACTION<br><span style="font-size: 14px; opacity: 0.8; font-weight: normal; letter-spacing: 2px; font-style: normal;">BONUS</span>
+          <svg style="width:40px;height:40px;margin-bottom:10px;animation:spinBg 3s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><br>
+          <span style="font-size: 22px;">Join the Action!</span><br>
+          <span style="font-size: 14px; opacity: 0.9; font-weight: normal;">Create an account and start winning.</span>
         </div>
         <div class="form-group">
           <label>Username (Letters/Numbers/Underscores)</label>
@@ -1099,16 +1305,22 @@
           <label>Phone Number</label>
           <div style="display:flex; background:#111827; border:1px solid #374151; border-radius:5px;">
             <span style="padding:10px; color:#9ca3af; border-right:1px solid #374151;">+254</span>
-            <input type="text" class="form-control" style="border:none;" id="signupPhone" placeholder="07...">
+            <input type="text" class="form-control" style="border:none;" id="signupPhone" placeholder="07..." oninput="validateSignup()">
           </div>
         </div>
         <div class="form-group">
           <label>PIN (6 digits)</label>
-          <input type="password" class="form-control" id="signupPin" maxlength="6">
+          <div style="position:relative;">
+            <input type="password" class="form-control" id="signupPin" maxlength="6" oninput="validateSignup()">
+            <svg onclick="togglePinVisibility('signupPin')" style="position:absolute; right:10px; top:12px; cursor:pointer; color:#9ca3af;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
         </div>
         <div class="form-group">
           <label>Confirm PIN</label>
-          <input type="password" class="form-control" id="signupPinConfirm" maxlength="6">
+          <div style="position:relative;">
+            <input type="password" class="form-control" id="signupPinConfirm" maxlength="6" oninput="validateSignup()">
+            <svg onclick="togglePinVisibility('signupPinConfirm')" style="position:absolute; right:10px; top:12px; cursor:pointer; color:#9ca3af;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
         </div>
         <div class="form-group">
           <label>Referral Code (Optional)</label>
@@ -1128,10 +1340,17 @@
       <!-- Forgot PIN Form -->
       <div id="forgotForm" style="display:none;">
         <h2 style="margin-top:0;">Forgot Password</h2>
-        <div class="success-msg" id="forgotPinDisplay" style="background:#064e3b; padding:10px; border-radius:5px; margin-bottom:10px; font-size:18px; font-weight:bold;"></div>
+        <div class="success-msg" id="forgotPinDisplay" style="background:#064e3b; padding:10px; border-radius:5px; margin-bottom:10px; font-size:18px; font-weight:bold; display:none; text-align:center;"></div>
         <div class="form-group">
           <label>Username</label>
           <input type="text" class="form-control" id="forgotUsername" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <div style="display:flex; background:#111827; border:1px solid #374151; border-radius:5px;">
+            <span style="padding:10px; color:#9ca3af; border-right:1px solid #374151;">+254</span>
+            <input type="text" class="form-control" style="border:none;" id="forgotPhone" placeholder="07...">
+          </div>
         </div>
         <div class="error-msg" id="forgotError"></div>
         <div class="spinner" id="forgotSpinner"></div>
@@ -1156,6 +1375,17 @@
       </div>
       <div style="padding: 15px 20px; border-top: 1px solid #374151; background: #1f2937;">
         <button class="btn-submit" onclick="markAllAsRead()" style="background:#3b82f6; margin-top:0; border-radius: 8px; font-weight: bold; transition: background 0.2s;">Mark All as Read</button>
+      </div>
+    </div>
+  </div>
+
+    <!-- ADMIN NOTIFICATIONS POPUP -->
+  <div class="popup-overlay" id="adminNotificationsPopup">
+    <div class="popup-content">
+      <span class="popup-close" onclick="document.getElementById('adminNotificationsPopup').style.display='none'">×</span>
+      <h2 style="margin-top:0; color:#3b82f6;">All Notifications</h2>
+      <div id="adminFullNotificationsList" style="max-height:400px; overflow-y:auto; padding:10px; background:#1f2937; border-radius:8px;">
+         <p style="text-align:center; color:#9ca3af;">Loading...</p>
       </div>
     </div>
   </div>
