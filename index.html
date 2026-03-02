@@ -1003,7 +1003,8 @@
 
     function resetFakeStats() {
       fakeTotalBetsCount = 0;
-      fakeMaxBetsCount = Math.floor(Math.random() * 3000) + 2000;
+      // Second number: Total people playing is random between 7000 and 10000
+      fakeMaxBetsCount = Math.floor(Math.random() * 3000) + 7000;
       fakeTotalWinAmount = 0.00;
       
       currentFakeAvatars = [];
@@ -1023,14 +1024,21 @@
 
     function updateFakeStats() {
       if (typeof gameState !== 'undefined' && gameState === 'RUNNING') {
-        let newBets = Math.floor(Math.random() * 50) + 10;
+        // First number: increases by random fast steps like 150, 200, 350
+        let newBets = Math.floor(Math.random() * 300) + 150;
         fakeTotalBetsCount += newBets;
-        if (fakeTotalBetsCount > fakeMaxBetsCount) fakeTotalBetsCount = fakeMaxBetsCount;
+        // Ensure it doesn't exceed the total max players
+        if (fakeTotalBetsCount >= fakeMaxBetsCount) {
+           fakeTotalBetsCount = fakeMaxBetsCount - Math.floor(Math.random() * 100);
+        }
 
-        let winIncrease = (Math.random() * 5000) + 1000;
+        // Total win amount: goes up fast like real money, up to ~1M max
+        let winIncrease = (Math.random() * 10000) + 5000; 
         fakeTotalWinAmount += winIncrease;
 
-        let progressPercent = (fakeTotalBetsCount / fakeMaxBetsCount) * 100;
+        // Progressive bar: moves slowly based on 1M being 100% full
+        let progressPercent = (fakeTotalWinAmount / 1000000) * 100;
+        if (progressPercent > 100) progressPercent = 100;
 
         const betsEl = document.getElementById('fakeTotalBets');
         const winEl = document.getElementById('fakeTotalWin');
@@ -1040,25 +1048,34 @@
         if(winEl) winEl.innerText = fakeTotalWinAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         if(barEl) barEl.style.width = `${progressPercent}%`;
 
+        // Avatars drop off sometimes during flight
         if (Math.random() > 0.7 && currentFakeAvatars.length > 4) {
           currentFakeAvatars.pop();
           renderFakeAvatars();
         }
 
       } else if (typeof gameState !== 'undefined' && gameState === 'WAITING') {
-        if (fakeTotalBetsCount !== 0) {
+        // When waiting round starts, clear out previous win data
+        if (fakeTotalWinAmount > 0) {
             resetFakeStats();
+            // Start the first number at roughly 40
+            fakeTotalBetsCount = Math.floor(Math.random() * 20) + 30; 
+            const betsEl = document.getElementById('fakeTotalBets');
+            if(betsEl) betsEl.innerText = `${fakeTotalBetsCount}/${fakeMaxBetsCount}`;
         }
 
-        if (Math.random() > 0.4 && currentFakeAvatars.length < 7) {
+        // Increase avatars up to 10
+        if (currentFakeAvatars.length < 10) {
           const randomAv = fakeAvatarImages[Math.floor(Math.random() * fakeAvatarImages.length)];
-          if (!currentFakeAvatars.includes(randomAv)) {
+          // Only add if it's unique or we randomly decide to push another
+          if (!currentFakeAvatars.includes(randomAv) || Math.random() > 0.5) {
             currentFakeAvatars.push(randomAv);
             renderFakeAvatars();
           }
         }
 
       } else if (typeof gameState !== 'undefined' && gameState === 'CRASHED') {
+        // Leave 1 avatar and freeze the stats
         if (currentFakeAvatars.length > 1) {
           currentFakeAvatars = [currentFakeAvatars[0]];
           renderFakeAvatars();
