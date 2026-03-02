@@ -24,8 +24,8 @@
   <meta property="twitter:image" content="aviator.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="aviator.png">
-  <link rel="apple-touch-icon" href="aviator.png">
+  <link rel="icon" type="image/png" href="aviator1.png">
+  <link rel="apple-touch-icon" href="aviator1.png">
   <title>Swiftcrash</title>
   <style>
     body { background-color: #09090b; color: white; font-family: sans-serif; margin: 0; padding-bottom: 60px; }
@@ -3283,7 +3283,7 @@
           hash = username.charCodeAt(i) + ((hash << 5) - hash);
         }
         
-        // 10 avatars avb1.png to avb10.png
+        // 10 avatars av1.png to av10.png
         const avatarNum = Math.abs(hash) % 10 + 1;
         
         // 8 distinct colors
@@ -3300,7 +3300,7 @@
         ];
         const colorHex = colors[Math.abs(hash) % colors.length];
         
-        return { avatar: `/images/avb${avatarNum}.png`, color: colorHex };
+        return { avatar: `/images/av${avatarNum}.png`, color: colorHex };
       }
 
       function toggleRules() {
@@ -3360,87 +3360,111 @@
       }
 
       function renderChats(messages, containerId, isAdmin = false) {
-        const container = document.getElementById(containerId);
-        const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-        
-        container.innerHTML = '';
-        
-        const msgMap = {};
-        messages.forEach(m => msgMap[m.id] = m);
+          const container = document.getElementById(containerId);
+          const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+          
+          container.innerHTML = '';
+          
+          const msgMap = {};
+          messages.forEach(m => msgMap[m.id] = m);
 
-        // Messages are already sorted by date desc from backend, but we want descending order (most recent at top)
-        messages.forEach(m => {
-          if(m.type === 'cashrain') {
-            const claimedRatio = m.current_claims + ' / ' + m.max_claims;
-            const isDistributed = m.current_claims >= m.max_claims;
-            const bg = isDistributed ? '#374151' : '#166534';
-            const btnText = isDistributed ? 'Distributed' : 'Claim';
-            container.innerHTML += `
-              <div style="background:${bg}; border-radius:12px; padding:15px; margin-bottom:5px;">
-                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                   <span style="font-weight:bold; color:white; display:flex; align-items:center; gap:5px;">🌧️ Rain Drop</span>
-                   <span style="color:#facc15; font-weight:bold;">${m.amount} KES</span>
-                 </div>
-                 <div style="font-size:12px; color:#d1d5db; margin-bottom:10px;">Available for ${m.max_claims} users (${claimedRatio} claimed)</div>
-                 <button ${isDistributed ? 'disabled' : ''} onclick="claimRain(${m.id})" style="width:100%; padding:10px; border-radius:8px; border:none; background:${isDistributed ? '#4b5563' : '#22c55e'}; color:white; font-weight:bold; cursor:${isDistributed ? 'not-allowed' : 'pointer'};">
-                   ${isDistributed ? 'Fully Claimed' : 'Claim Now'}
-                 </button>
-                 ${isAdmin ? `<button onclick="deleteChat(${m.id})" style="margin-top:5px; padding:5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; width:100%; font-size:12px;">Delete</button>` : ''}
-              </div>
-            `;
-          } else {
-            const isCaptain = m.is_admin;
-            const name = isCaptain ? 'captain' : m.username;
-            const { avatar, color } = getConsistentAvatarAndColor(name);
-            const finalColor = isCaptain ? '#a855f7' : color;
-            const finalAvatar = isCaptain ? '/images/admin-avatar.png' : avatar;
-            
-            let replyHtml = '';
-            if (m.reply_to && msgMap[m.reply_to]) {
-               const rep = msgMap[m.reply_to];
-               replyHtml = `<div style="font-size:11px; color:#9ca3af; border-left:3px solid #4ade80; padding-left:8px; margin-bottom:6px; background:rgba(0,0,0,0.2); padding-top:4px; padding-bottom:4px; border-radius:0 4px 4px 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 90%;">
-                 <span style="color:#4ade80; font-weight:bold;">${rep.is_admin ? 'captain' : rep.username}</span>: ${rep.message}
-               </div>`;
-            }
+          const topLevelMessages = [];
+          const repliesMap = {};
 
-            container.innerHTML += `
-              <div class="chat-item">
-                <img src="${finalAvatar}" class="chat-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Y2EzYWYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTkgMjF2LTJhNCA0IDAgMCAwLTQtNEg5YTQgNCAwIDAgMC00IDR2MiI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCI+PC9jaXJjbGU+PC9zdmc+'" />
-                <div class="chat-content" style="width:100%; overflow:hidden;">
-                  <div class="chat-header">
-                    <span class="chat-username ${isCaptain ? 'admin' : ''}" style="color:${finalColor}">${name}</span>
-                    <span class="chat-time">${new Date(m.created_at).toLocaleTimeString('en-GB', {timeZone: 'Africa/Nairobi', hour: '2-digit', minute:'2-digit', second:'2-digit'})}</span>
-                  </div>
-                  ${replyHtml}
-                  <div class="chat-bubble ${isCaptain ? 'admin' : ''}" style="word-wrap:break-word;">
-                    ${m.message}
-                  </div>
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                    <div style="display:flex; gap:12px;">
-                      <span style="font-size:11px; color:#9ca3af; cursor:pointer; display:flex; align-items:center; gap:3px;" onclick="likeMessage(${m.id})">
-                         <svg width="12" height="12" viewBox="0 0 24 24" fill="${m.likes > 0 ? '#ef4444' : 'none'}" stroke="${m.likes > 0 ? '#ef4444' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                         ${m.likes || 0}
-                      </span>
-                      <span style="font-size:11px; color:#9ca3af; cursor:pointer; display:flex; align-items:center; gap:3px;" onclick="showReplyInput(${m.id}, '${name}')">
-                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
-                         Reply
-                      </span>
-                    </div>
-                    ${isAdmin ? `<button onclick="deleteChat(${m.id})" style="padding:2px 6px; background:#ef4444; color:white; border:none; border-radius:4px; cursor:pointer; font-size:10px;">Delete</button>` : ''}
-                  </div>
-                  <div id="reply-container-${m.id}"></div>
+          // Messages are sorted by date desc from backend
+          messages.forEach(m => {
+              if (m.reply_to && msgMap[m.reply_to]) {
+                  if (!repliesMap[m.reply_to]) repliesMap[m.reply_to] = [];
+                  repliesMap[m.reply_to].push(m);
+              } else {
+                  topLevelMessages.push(m);
+              }
+          });
+
+          // We want oldest at top, newest at bottom, so we reverse topLevelMessages
+          topLevelMessages.reverse().forEach(m => {
+            if(m.type === 'cashrain') {
+              const claimedRatio = m.current_claims + ' / ' + m.max_claims;
+              const isDistributed = m.current_claims >= m.max_claims;
+              const bg = isDistributed ? '#374151' : '#166534';
+              const btnText = isDistributed ? 'Distributed' : 'Claim';
+              container.innerHTML += `
+                <div style="background:${bg}; border-radius:12px; padding:15px; margin-bottom:5px;">
+                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                     <span style="font-weight:bold; color:white; display:flex; align-items:center; gap:5px;">🌧️ Rain Drop</span>
+                     <span style="color:#facc15; font-weight:bold;">${m.amount} KES</span>
+                   </div>
+                   <div style="font-size:12px; color:#d1d5db; margin-bottom:10px;">Available for ${m.max_claims} users (${claimedRatio} claimed)</div>
+                   <button ${isDistributed ? 'disabled' : ''} onclick="claimRain(${m.id})" style="width:100%; padding:10px; border-radius:8px; border:none; background:${isDistributed ? '#4b5563' : '#22c55e'}; color:white; font-weight:bold; cursor:${isDistributed ? 'not-allowed' : 'pointer'};">
+                     ${isDistributed ? 'Fully Claimed' : 'Claim Now'}
+                   </button>
+                   ${isAdmin ? `<button onclick="deleteChat(${m.id})" style="margin-top:5px; padding:5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; width:100%; font-size:12px;">Delete</button>` : ''}
                 </div>
-              </div>
-            `;
-          }
-        });
+              `;
+            } else {
+              const isCaptain = m.is_admin;
+              const name = isCaptain ? 'captain' : m.username;
+              const { avatar, color } = getConsistentAvatarAndColor(name);
+              const finalColor = isCaptain ? '#a855f7' : color;
+              const finalAvatar = isCaptain ? '/images/admin-avatar.png' : avatar;
+              
+              let repliesHtml = '';
+              if (repliesMap[m.id]) {
+                  repliesMap[m.id].reverse().forEach(rep => {
+                      const repName = rep.is_admin ? 'captain' : rep.username;
+                      repliesHtml += `
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); display:flex; flex-direction:column; gap:2px;">
+                          <div style="font-size:11px; font-weight:bold; color:#4ade80;">Admin reply:</div>
+                          <div style="font-size:13px; color:#e5e7eb;">${rep.message}</div>
+                        </div>
+                      `;
+                  });
+              }
 
-        if (wasAtBottom) {
-          scrollToBottom();
+              container.innerHTML += `
+                <div class="chat-item">
+                  <img src="${finalAvatar}" class="chat-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Y2EzYWYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTkgMjF2LTJhNCA0IDAgMCAwLTQtNEg5YTQgNCAwIDAgMC00IDR2MiI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCI+PC9jaXJjbGU+PC9zdmc+'" />
+                  <div class="chat-content" style="width:100%; overflow:hidden;">
+                    <div class="chat-header">
+                      <span class="chat-username ${isCaptain ? 'admin' : ''}" style="color:${finalColor}">${name}</span>
+                      <span class="chat-time">${new Date(m.created_at).toLocaleTimeString('en-GB', {timeZone: 'Africa/Nairobi', hour: '2-digit', minute:'2-digit', second:'2-digit'})}</span>
+                    </div>
+                    <div class="chat-bubble ${isCaptain ? 'admin' : ''}" style="word-wrap:break-word; max-width: 100%;">
+                      ${m.message}
+                      ${repliesHtml}
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                      <div style="display:flex; gap:12px;">
+                        <span style="font-size:11px; color:#9ca3af; cursor:pointer; display:flex; align-items:center; gap:3px;" onclick="likeMessage(${m.id})">
+                           <svg width="12" height="12" viewBox="0 0 24 24" fill="${m.likes > 0 ? '#ef4444' : 'none'}" stroke="${m.likes > 0 ? '#ef4444' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                           ${m.likes || 0}
+                        </span>
+                        ${isAdmin ? `
+                        <span style="font-size:11px; color:#9ca3af; cursor:pointer; display:flex; align-items:center; gap:3px;" onclick="showReplyInput(${m.id}, '${name}')">
+                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
+                           Reply
+                        </span>` : ''}
+                      </div>
+                      ${isAdmin ? `<button onclick="deleteChat(${m.id})" style="padding:2px 6px; background:#ef4444; color:white; border:none; border-radius:4px; cursor:pointer; font-size:10px;">Delete</button>` : ''}
+                    </div>
+                    <div id="reply-container-${m.id}"></div>
+                  </div>
+                </div>
+              `;
+            }
+          });
+
+          if (wasAtBottom) {
+            scrollToBottom();
+          } else {
+            // If we just loaded and container was empty, scroll to bottom
+            if (container.scrollTop === 0) {
+                scrollToBottom();
+            }
+          }
+          
+          addSwipeToReply();
         }
-        
-        addSwipeToReply();
-      }
 
       async function sendChat() {
         const input = document.getElementById('chatInput');
