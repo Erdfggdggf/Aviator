@@ -473,7 +473,9 @@
       
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; cursor:pointer; font-size:14px;" onclick="openProfilePopup(); toggleHamburger();">
         <span>Profile</span>
-        <div class="profile-icon" id="profileIcon" style="display:block; background:none; padding:0;">👤</div>
+      <div class="profile-icon" id="profileIcon" onclick="window.location.href='menu.html'" style="display:block; background:#374151; padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </div>
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-top:1px solid #374151; padding-top:10px; font-size:14px;">
@@ -3212,6 +3214,7 @@
         <div class="rule-item"><span class="rule-bullet">›</span><span>Chat access is restricted for players whose account has been active for less than 1 day(s).</span></div>
       </div>
       
+      <div id="chatNotificationArea" style="position: sticky; top: 0; z-index: 100; margin-bottom: 10px;"></div>
       <div id="chatMessages" onscroll="handleChatScroll()">
         <!-- Messages load here -->
       </div>
@@ -3541,7 +3544,7 @@
           const res = await fetch(`${BACKEND_URL}/chat/messages`);
           const data = await res.json();
           if(data.success) {
-            const container = document.getElementById('gameNotifications');
+            const container = document.getElementById('chatNotificationArea');
             // Show cashrain and look for cashout messages if type is 'cashout' (hypothetically)
             const bannerMessages = data.messages.filter(m => m.type === 'cashrain' || m.type === 'cashout');
             
@@ -3568,7 +3571,7 @@
       }
 
       function renderNotificationBanner(m) {
-        const container = document.getElementById('gameNotifications');
+        const container = document.getElementById('chatNotificationArea');
         const div = document.createElement('div');
         div.id = `notif-banner-${m.id}`;
         div.className = 'game-notification-banner';
@@ -3583,24 +3586,36 @@
         const alreadyClaimed = claimedNotifications.has(m.id);
         
         div.innerHTML = `
-          <div class="game-notif-left">
-            <div class="game-notif-icon">${icon}</div>
-            <div class="game-notif-info">
-              <h4>${title}</h4>
-              <p id="notif-desc-${m.id}">${isCashrain ? `${m.max_claims} users (${claimedRatio} claimed)` : m.message}</p>
-            </div>
-          </div>
-          <div class="game-notif-right">
-            <div class="game-notif-amount">${m.amount || ''} ${m.amount ? 'KES' : ''}</div>
-            ${isCashrain ? `
-              <button id="btn-claim-banner-${m.id}" ${(isDistributed || alreadyClaimed) ? 'disabled' : ''} 
-                onclick="handleClaimClick(${m.id})" class="btn-claim-notif">
-                ${alreadyClaimed ? 'Claimed' : (isDistributed ? 'Fully Claimed' : 'Claim')}
-              </button>
-            ` : ''}
+          <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+             <div style="display:flex; align-items:center; gap: 15px;">
+               <div style="font-size: 24px; background: #374151; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">🌧️</div>
+               <div style="text-align: left;">
+                 <div style="font-weight:bold; font-size:16px; color:#ffffff;">${title}</div>
+                 <div id="claim-desc-${m.id}" style="font-size:13px; color:#9ca3af; margin-top:2px;">
+                   ${isCashrain ? `${m.max_claims} users (${claimedRatio} claimed)` : m.message}
+                 </div>
+               </div>
+             </div>
+             ${isCashrain ? `
+             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+               <div style="color:#22c55e; font-weight:bold; font-size:15px;">${m.amount ? parseFloat(m.amount).toFixed(2) + ' KES' : ''}</div>
+               <button id="btn-claim-banner-${m.id}" ${(isDistributed || alreadyClaimed) ? 'disabled' : ''} 
+                 onclick="handleClaimClick(${m.id})" class="btn-claim-notif" style="padding: 6px 20px; border-radius: 6px;">
+                 ${alreadyClaimed ? 'Claimed' : (isDistributed ? 'Fully Claimed' : 'Claim')}
+               </button>
+             </div>
+             ` : ''}
           </div>
         `;
+
         container.appendChild(div);
+
+        // Make the popup disappear after 1 minute (60000 milliseconds)
+        setTimeout(() => {
+          if (div && div.parentNode) {
+            div.remove();
+          }
+        }, 60000);
       }
 
       function updateNotificationBanner(m) {
@@ -3621,7 +3636,17 @@
       }
 
       async function handleClaimClick(rainId) {
+        const btn = document.getElementById(`btn-claim-banner-${rainId}`);
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = `<span style="display:inline-block; width:12px; height:12px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite; margin-right:5px; vertical-align:middle;"></span> Claiming...`;
+        }
+        
         await claimRain(rainId);
+        
+        if (btn) {
+          btn.innerHTML = "Claimed";
+        }
       }
 
       // Initialize claimed notifications
