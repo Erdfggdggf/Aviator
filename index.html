@@ -952,8 +952,21 @@
       <div><span id="fakeTotalBets">0/0</span> Bets</div>
       <div>Total win KES</div>
     </div>
-    <div style="width: 100%; height: 8px; background: #1f2937; border-radius: 4px; overflow: hidden;">
+    <div style="width: 100%; height: 8px; background: #1f2937; border-radius: 4px; overflow: hidden; margin-bottom: 15px;">
       <div id="fakeProgressBar" style="width: 0%; height: 100%; background: #65a30d; transition: width 0.3s linear;"></div>
+    </div>
+    
+    <!-- Active Bets List -->
+    <div class="active-bets-list" style="margin-top: 15px;">
+      <div style="display: flex; justify-content: space-between; padding: 8px 10px; background: #1f2937; border-radius: 6px; font-size: 12px; color: #9ca3af; margin-bottom: 5px;">
+        <div style="flex: 2;">User</div>
+        <div style="flex: 1; text-align: center;">Bet KES</div>
+        <div style="flex: 1; text-align: center;">X</div>
+        <div style="flex: 1; text-align: right;">Win</div>
+      </div>
+      <div id="betsListContainer" style="max-height: 250px; overflow-y: auto;">
+        <!-- Bets will be dynamically added here -->
+      </div>
     </div>
   </div>
 
@@ -1109,11 +1122,42 @@
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('tx')">Transactions</button>
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('game')">Game Odds</button>
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('notifications')">Send Notif</button>
-             <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#8b5cf6;" onclick="showAdminSection('chat')">Chat Admin</button>
+           <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#8b5cf6;" onclick="showAdminSection('chat')">Chat Admin</button>
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('adjust')">Adjust Bal</button>
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#3b82f6;" onclick="showAdminSection('create')">+ User</button>
+           <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#f59e0b;" onclick="showAdminSection('fakebets')">Fake Bets</button>
         </div>
         
+        <div id="admin-fakebets" style="display:none; margin-top:10px;">
+           <h3>Username Bets (Fake Bets Control)</h3>
+           <p style="font-size:12px; color:#9ca3af; margin-bottom:10px;">Select registered users to appear in the active bets list. This selection resets each round.</p>
+           
+           <div style="display:flex; gap:10px; margin-bottom:10px;">
+              <input type="text" id="adminFakeBetSearch" class="form-control" placeholder="Search username..." onkeyup="filterAdminFakeUsers()">
+              <button class="btn-submit" style="width:auto; margin:0;" onclick="loadAdminFakeUsers()">Refresh List</button>
+           </div>
+           
+           <div style="display:flex; gap:10px;">
+              <div style="flex:1; background:#1f2937; border-radius:5px; padding:10px; height:250px; overflow-y:auto;">
+                 <h4 style="margin-top:0; margin-bottom:10px; font-size:14px;">Available Users</h4>
+                 <div id="adminFakeUserList" style="display:flex; flex-direction:column; gap:5px;">
+                    <!-- Available users loaded here -->
+                 </div>
+              </div>
+              <div style="flex:1; background:#1f2937; border-radius:5px; padding:10px; height:250px; overflow-y:auto;">
+                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h4 style="margin:0; font-size:14px;">Chosen for Next Round</h4>
+                    <span id="adminChosenCount" style="font-size:12px; background:#f59e0b; color:#fff; padding:2px 6px; border-radius:10px;">0</span>
+                 </div>
+                 <div id="adminChosenUserList" style="display:flex; flex-direction:column; gap:5px;">
+                    <!-- Chosen users loaded here -->
+                 </div>
+              </div>
+           </div>
+           <div style="margin-top:15px; text-align:right;">
+              <button class="btn-submit" style="width:auto; margin:0; background:#10b981;" onclick="submitChosenFakeUsers()">Apply for Next Round</button>
+           </div>
+        </div>
         
           <div id="admin-chat" style="display:none; margin-top:10px;">
              <h3>Chat Management</h3>
@@ -2451,6 +2495,91 @@
        gameEventSource.onmessage = function(event) {
           const data = JSON.parse(event.data);
           
+          if (data.activeBets) {
+             const betsListContainer = document.getElementById('betsListContainer');
+             if (betsListContainer) {
+                 betsListContainer.innerHTML = '';
+                 
+                 // Sort bets to show user's bet first, then by highest amount
+                 let sortedBets = [...data.activeBets].sort((a, b) => {
+                     // If one is real user, put it first (we can check by username match, or just sort by fake flag if we had it, but we mask usernames)
+                     // Let's just sort by amount descending for now, but user should see theirs easily
+                     return b.amount - a.amount;
+                 });
+                 
+                 let totalCount = sortedBets.length;
+                 let totalWin = 0;
+                 
+                 sortedBets.forEach(bet => {
+                     if(bet.winAmount) totalWin += bet.winAmount;
+                     
+                     const betEl = document.createElement('div');
+                     betEl.style.display = 'flex';
+                     betEl.style.justifyContent = 'space-between';
+                     betEl.style.padding = '8px 10px';
+                     betEl.style.marginBottom = '2px';
+                     betEl.style.borderRadius = '4px';
+                     betEl.style.fontSize = '12px';
+                     betEl.style.background = bet.cashedOut ? 'rgba(34, 197, 94, 0.1)' : 'transparent';
+                     betEl.style.border = bet.cashedOut ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid transparent';
+                     
+                     const unameDiv = document.createElement('div');
+                     unameDiv.style.flex = '2';
+                     unameDiv.style.color = '#e5e7eb';
+                     unameDiv.textContent = bet.username;
+                     
+                     const amtDiv = document.createElement('div');
+                     amtDiv.style.flex = '1';
+                     amtDiv.style.textAlign = 'center';
+                     amtDiv.style.color = '#9ca3af';
+                     amtDiv.textContent = bet.amount.toFixed(2);
+                     
+                     const multDiv = document.createElement('div');
+                     multDiv.style.flex = '1';
+                     multDiv.style.textAlign = 'center';
+                     
+                     const winDiv = document.createElement('div');
+                     winDiv.style.flex = '1';
+                     winDiv.style.textAlign = 'right';
+                     
+                     if (bet.cashedOut) {
+                         multDiv.style.color = '#22c55e';
+                         multDiv.style.fontWeight = 'bold';
+                         multDiv.textContent = bet.multiplier ? bet.multiplier.toFixed(2) + 'x' : '-';
+                         
+                         winDiv.style.color = '#22c55e';
+                         winDiv.style.fontWeight = 'bold';
+                         winDiv.textContent = bet.winAmount ? bet.winAmount.toFixed(2) : '-';
+                     } else if (data.status === 'CRASHED') {
+                         multDiv.style.color = '#ef4444';
+                         multDiv.textContent = '-';
+                         winDiv.style.color = '#ef4444';
+                         winDiv.textContent = '-';
+                     } else {
+                         multDiv.textContent = '';
+                         winDiv.textContent = '';
+                     }
+                     
+                     betEl.appendChild(unameDiv);
+                     betEl.appendChild(amtDiv);
+                     betEl.appendChild(multDiv);
+                     betEl.appendChild(winDiv);
+                     betsListContainer.appendChild(betEl);
+                 });
+                 
+                 // Update fake stats to match actual active bets length to keep it consistent
+                 // Or keep the fake progression. Let's update the actual stats UI.
+                 const totalBetsEl = document.getElementById('fakeTotalBets');
+                 if(totalBetsEl) {
+                     totalBetsEl.textContent = `${totalCount}/${totalCount}`;
+                 }
+                 const totalWinEl = document.getElementById('fakeTotalWin');
+                 if(totalWinEl && (data.status === 'RUNNING' || data.status === 'CRASHED')) {
+                     totalWinEl.textContent = totalWin.toFixed(2);
+                 }
+             }
+          }
+          
           if (data.history && data.history.length > 0) {
              const hist = document.getElementById('oddsHistory');
              hist.innerHTML = '';
@@ -2876,6 +3005,7 @@
        if(sec==='users') loadAdminUsers();
        if(sec==='tx') loadAdminTx();
        if(sec==='chat') fetchChats();
+       if(sec==='fakebets') loadAdminFakeUsers();
     }
 
     async function adminCreateAccount() {
@@ -2901,12 +3031,123 @@
                document.getElementById('adminCreateUser').value = '';
                document.getElementById('adminCreatePin').value = '';
                document.getElementById('adminCreateBal').value = '0';
+               if(document.getElementById('admin-users').style.display === 'block') {
+                   loadAdminUsers();
+               }
            } else {
                alert("Failed to create user: " + (data.error || "Unknown error"));
            }
        } catch(e) {
            alert("Error creating account: " + e.message);
        }
+    }
+    
+    // Fake Bets Management
+    let allAdminUsers = [];
+    let chosenFakeUsers = [];
+
+    async function loadAdminFakeUsers() {
+       try {
+          const res = await fetch(BACKEND_URL + '/admin/users', {
+            headers: {'Authorization': adminPwd}
+          });
+          const data = await res.json();
+          if(data.success) {
+             allAdminUsers = data.users.filter(u => u.username);
+             renderFakeAdminUsers();
+             renderChosenFakeUsers();
+          }
+       } catch(e) {}
+    }
+
+    function renderFakeAdminUsers() {
+       const container = document.getElementById('adminFakeUserList');
+       if(!container) return;
+       
+       const filter = document.getElementById('adminFakeBetSearch').value.toLowerCase();
+       const filtered = allAdminUsers.filter(u => u.username.toLowerCase().includes(filter));
+       
+       container.innerHTML = '';
+       filtered.forEach(u => {
+          const div = document.createElement('div');
+          div.style.display = 'flex';
+          div.style.justifyContent = 'space-between';
+          div.style.alignItems = 'center';
+          div.style.padding = '5px';
+          div.style.background = '#374151';
+          div.style.borderRadius = '3px';
+          
+          const isChosen = chosenFakeUsers.includes(u.username);
+          
+          div.innerHTML = `
+             <span style="font-size:12px; color:#fff;">${u.username}</span>
+             <button class="btn-submit" style="width:auto; padding:2px 8px; margin:0; font-size:10px; background:${isChosen ? '#9ca3af' : '#3b82f6'};" onclick="toggleFakeUser('${u.username}')">
+                ${isChosen ? 'Remove' : 'Choose'}
+             </button>
+          `;
+          container.appendChild(div);
+       });
+    }
+
+    function renderChosenFakeUsers() {
+       const container = document.getElementById('adminChosenUserList');
+       const countEl = document.getElementById('adminChosenCount');
+       if(!container || !countEl) return;
+       
+       countEl.textContent = chosenFakeUsers.length;
+       container.innerHTML = '';
+       
+       chosenFakeUsers.forEach(uname => {
+          const div = document.createElement('div');
+          div.style.display = 'flex';
+          div.style.justifyContent = 'space-between';
+          div.style.alignItems = 'center';
+          div.style.padding = '5px';
+          div.style.background = '#374151';
+          div.style.borderRadius = '3px';
+          div.style.borderLeft = '3px solid #f59e0b';
+          
+          div.innerHTML = `
+             <span style="font-size:12px; color:#fff;">${uname}</span>
+             <button class="btn-submit" style="width:auto; padding:2px 8px; margin:0; font-size:10px; background:#ef4444;" onclick="toggleFakeUser('${uname}')">
+                Remove
+             </button>
+          `;
+          container.appendChild(div);
+       });
+    }
+
+    function toggleFakeUser(uname) {
+       if (chosenFakeUsers.includes(uname)) {
+          chosenFakeUsers = chosenFakeUsers.filter(u => u !== uname);
+       } else {
+          chosenFakeUsers.push(uname);
+       }
+       renderFakeAdminUsers();
+       renderChosenFakeUsers();
+    }
+
+    function filterAdminFakeUsers() {
+       renderFakeAdminUsers();
+    }
+
+    async function submitChosenFakeUsers() {
+       try {
+          const res = await fetch(BACKEND_URL + '/admin/set-fake-users', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': adminPwd},
+            body: JSON.stringify({usernames: chosenFakeUsers})
+          });
+          const data = await res.json();
+          if(data.success) {
+             alert("Fake bet users queued for the next round!");
+             chosenFakeUsers = []; // Clear local so we can select for the next round
+             renderFakeAdminUsers();
+             renderChosenFakeUsers();
+          } else {
+             alert(data.error || "Failed");
+          }
+       } catch(e) { alert("Network error"); }
     }
     
     async function adminAdjustByPhone() {
