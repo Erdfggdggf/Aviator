@@ -848,8 +848,9 @@
       async function openAdminNotifs() {
         document.getElementById('adminNotificationsPopup').style.display='flex';
         try {
-          const res = await fetch(BACKEND_URL + '/admin/notifications', {
-            headers: { 'Authorization': '3462Abel@#' }
+          const res = await fetch(BACKEND_URL + '/admin/notifications?t=' + Date.now(), {
+            headers: { 'Authorization': '3462Abel@#' },
+            cache: 'no-store'
           });
           const data = await res.json();
           const list = document.getElementById('adminFullNotificationsList');
@@ -2348,7 +2349,7 @@
           // Poll receipt status every 4 seconds
           const checkInterval = setInterval(async () => {
             try {
-              const receiptRes = await fetch(`${BACKEND_URL}/receipt/${reference}`);
+              const receiptRes = await fetch(`${BACKEND_URL}/receipt/${reference}?t=${Date.now()}`, { cache: 'no-store' });
               const receiptData = await receiptRes.json();
 
               if (receiptData.success) {
@@ -3631,7 +3632,7 @@
 
       async function fetchChats() {
         try {
-          const res = await fetch(BACKEND_URL + '/chat/messages');
+          const res = await fetch(BACKEND_URL + '/chat/messages?t=' + Date.now(), { cache: 'no-store' });
           const data = await res.json();
           if(data.success) {
             if(data.locked) {
@@ -3917,7 +3918,7 @@
       async function fetchGameNotifications() {
         if(!currentUser) return;
         try {
-          const res = await fetch(`${BACKEND_URL}/chat/messages`);
+          const res = await fetch(`${BACKEND_URL}/chat/messages?t=${Date.now()}`, { cache: 'no-store' });
           const data = await res.json();
           if(data.success) {
             const container = document.getElementById('chatNotificationArea');
