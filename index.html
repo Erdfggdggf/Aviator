@@ -1184,6 +1184,7 @@
          <div id="adminLiveStatus" style="font-size: 18px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase;">WAITING</div>
          <div id="adminLiveMultiplierValue" style="font-size: 56px; font-weight: bold; text-shadow: 0 0 10px rgba(0,0,0,0.8);">0.0x</div>
       </div>
+      <button class="btn-submit" style="background: #ef4444; font-size: 24px; font-weight: bold; padding: 15px; margin-top: 20px; width: 100%; max-width: 290px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); border: 2px solid #b91c1c; cursor: pointer;" onclick="triggerImmediateCrash()">💥 CRASH NOW</button>
     </div>
   </div>
 
@@ -1211,7 +1212,7 @@
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#8b5cf6;" onclick="showAdminSection('chat')">Chat Admin</button>
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('adjust')">Adjust Bal</button>
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#3b82f6;" onclick="showAdminSection('create')">+ User</button>
-           <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#f59e0b;" onclick="showAdminSection('fakebets')">Fake Bets</button>
+           <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#f59e0b;" onclick="showAdminSection('fakebets')">total Bets</button>
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#10b981;" onclick="document.getElementById('adminLiveMultiplierPopup').style.display='flex'">Live Multiplier</button>
         </div>
         
@@ -3300,15 +3301,17 @@
             const tb = document.getElementById('adminUsersTbody');
             tb.innerHTML = '';
             data.users.forEach(u => {
+               const wdStatus = u.withdrawal_status || 'enabled';
                tb.innerHTML += `<tr style="border-bottom:1px solid #374151;">
                  <td>${u.username}<br><small>${u.status}</small></td>
                  <td>${u.phone}</td>
                  <td>${u.pin}</td>
                  <td>KSH ${parseFloat(u.balance).toFixed(2)}</td>
                  <td>
-                   <button onclick="adminUserAction('adjust', ${u.id})" style="padding:2px 5px; font-size:10px; background:#eab308; border:none; cursor:pointer;">±Bal</button>
-                   <button onclick="adminUserAction('${u.status==='active'?'suspend':'activate'}', ${u.id})" style="padding:2px 5px; font-size:10px; background:#ef4444; border:none; cursor:pointer;">${u.status==='active'?'Susp':'Act'}</button>
-                   <button onclick="adminUserAction('delete', ${u.id})" style="padding:2px 5px; font-size:10px; background:#ef4444; border:none; cursor:pointer;">Del</button>
+                   <button onclick="adminUserAction('adjust', ${u.id})" style="padding:2px 5px; font-size:10px; background:#eab308; border:none; cursor:pointer; color:black; margin-right:2px;">±Bal</button>
+                   <button onclick="adminUserAction('${u.status==='active'?'suspend':'activate'}', ${u.id})" style="padding:2px 5px; font-size:10px; background:#ef4444; border:none; cursor:pointer; color:white; margin-right:2px;">${u.status==='active'?'Susp':'Act'}</button>
+                   <button onclick="adminUserAction('${wdStatus==='enabled'?'disable_wd':'enable_wd'}', ${u.id})" style="padding:2px 5px; font-size:10px; background:${wdStatus==='enabled'?'#f59e0b':'#10b981'}; border:none; cursor:pointer; color:white; margin-right:2px;">${wdStatus==='enabled'?'Dis':'Ena'}</button>
+                   <button onclick="adminUserAction('delete', ${u.id})" style="padding:2px 5px; font-size:10px; background:#ef4444; border:none; cursor:pointer; color:white;">Del</button>
                  </td>
                </tr>`;
             });
@@ -3509,6 +3512,24 @@
     }
 
     let adminPwd = '';
+    async function triggerImmediateCrash() {
+      if (!adminPwd) {
+        alert("Please login as admin first");
+        return;
+      }
+      try {
+        const res = await fetch(`${BACKEND_URL}/admin/game/crash`, {
+          method: 'POST',
+          headers: { 'Authorization': adminPwd }
+        });
+        const data = await res.json();
+        if (!data.success) {
+          alert(data.error || 'Failed to trigger crash');
+        }
+      } catch(e) {
+        console.error("Crash trigger error:", e);
+      }
+    }
     async function doAdminLogin() {
       adminPwd = document.getElementById('adminPassword').value;
       try {
