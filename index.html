@@ -382,6 +382,36 @@
     .toast-success { background: linear-gradient(135deg, #16a34a, #22c55e); }
     .toast-error { background: linear-gradient(135deg, #dc2626, #ef4444); }
 
+    /* Typewriter effect for "swiftcrash" */
+    .typewriter-container {
+      display: inline-block;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 3px solid #ef4444;
+      width: 0;
+      animation: typing 2.5s steps(10, end) infinite alternate, blink-caret .75s step-end infinite;
+    }
+    @keyframes typing { 
+      0%, 20% { width: 0; } 
+      80%, 100% { width: 195px; } 
+    }
+    @keyframes blink-caret { 
+      from, to { border-color: transparent; } 
+      50% { border-color: #ef4444; } 
+    }
+
+    /* Fly and vanish effect */
+    .fly-vanish-plane { 
+      display: inline-block; 
+      margin-left: 5px; 
+      animation: flyVanish 1.5s ease-in-out infinite; 
+    }
+    @keyframes flyVanish { 
+      0% { transform: translate(0, 0) scale(1); opacity: 1; } 
+      70% { transform: translate(30px, -20px) scale(1.1); opacity: 0; } 
+      100% { transform: translate(30px, -20px) scale(1.1); opacity: 0; } 
+    }
+
   </style>
 </head>
 <body>
@@ -391,13 +421,15 @@
 
   <!-- Loading Screen -->
   <div id="loadingScreen" style="position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    <div class="loading-glow">
-      <h1 class="logo animate-logo" style="font-size: 36px; margin-bottom: 30px;">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48" style="margin-right: 12px; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6));">
-          <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-.5-.5-2.5 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6.2 3.8L6.5 14 3.8 13c-.4-.1-.8.2-1 .5L2 14.5l4.5 3 3 4.5 1-1c.3-.2.6-.6.5-1L10 17.5l2.2-2.7 8.2 6.2c.4.3.8-.1.7-.5l-1.2-4.3z"/>
-        </svg>
-        Swiftcrash
-      </h1>
+    <div class="loading-glow" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 30px;">
+      <!-- Main Logo Image -->
+      <img src="swift.png" alt="Swift Logo" style="width: 80px; height: 80px; margin-bottom: 15px; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6));">
+      
+      <!-- Typewriter Text and Vanishing Plane -->
+      <div style="display: flex; align-items: center; font-size: 36px; font-weight: 900; color: #ef4444; filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.3));">
+        <span class="typewriter-container">swiftcrash</span>
+        <img src="swift.png" alt="flying plane" class="fly-vanish-plane" style="width: 32px; height: 32px;">
+      </div>
     </div>
     
     <div id="advancedLoader" style="display: none; margin-bottom: 20px;">
@@ -442,7 +474,10 @@
 
   <!-- Header -->
   <div class="header">
-    <div class="logo"><span style="color:#ef4444"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-.5-.5-2.5 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6.2 3.8L6.5 14 3.8 13c-.4-.1-.8.2-1 .5L2 14.5l4.5 3 3 4.5 1-1c.3-.2.6-.6.5-1L10 17.5l2.2-2.7 8.2 6.2c.4.3.8-.1.7-.5l-1.2-4.3z"/></svg></span> Swiftcrash</div>
+    <div class="logo">
+      <img src="swift.png" alt="Swiftcrash" style="width: 24px; height: 24px; margin-right: 8px;">
+      Swiftcrash
+    </div>
     <div class="header-actions">
       <button class="btn-login-header" id="headerLoginBtn" onclick="openAuth('login')">Login</button>
       <div class="balance" id="headerBalance" style="display:none; align-items:center; gap:5px;">
@@ -569,6 +604,8 @@
     
     let flyOsc = null;
     let flyGain = null;
+    const flyAudio = new Audio('https://res.cloudinary.com/dn3nftart/video/upload/v1772465556/aviator_sybfn7.mp3');
+    flyAudio.loop = true;
     function playSound(type) {
       if(!document.getElementById('soundSwitch').checked) return;
       try {
@@ -595,14 +632,10 @@
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
           osc.start(); osc.stop(ctx.currentTime + 0.4);
         } else if (type === 'fly') {
-          osc.type = 'sawtooth'; osc.frequency.setValueAtTime(80, ctx.currentTime);
-          osc.frequency.linearRampToValueAtTime(200, ctx.currentTime + 30);
-          gain.gain.setValueAtTime(0, ctx.currentTime);
-          gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.5);
-          osc.start();
-          flyOsc = osc;
-          flyGain = gain;
+          flyAudio.currentTime = 0;
+          flyAudio.play().catch(e => console.log(e));
         } else if (type === 'crash') {
+          flyAudio.pause();
           if (flyOsc) {
             try { flyOsc.stop(); } catch(e) {}
             flyOsc = null;
@@ -871,8 +904,9 @@
       <path id="trailFill" d="" fill="url(#trailGrad)" />
       <path id="trailPath" d="" fill="none" stroke="#ef4444" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
     </svg>
+    <!-- Plane Image -->
     <div class="plane" id="plane">
-      <img src="aviator.png" width="80" height="40" style="filter: drop-shadow(0px 15px 10px rgba(0, 0, 0, 0.5)); object-fit: contain;" alt="Plane">
+      <img src="swift.png" alt="Plane" style="width: 100%; height: 100%; object-fit: contain;">
     </div>
   </div>
 
@@ -1024,17 +1058,39 @@
 
     function updateFakeStats() {
       if (typeof gameState !== 'undefined' && gameState === 'RUNNING') {
-        // First number: increases by random fast steps like 150, 200, 350
-        let newBets = Math.floor(Math.random() * 300) + 150;
-        fakeTotalBetsCount += newBets;
-        // Ensure it doesn't exceed the total max players
+        // First number: mostly increases, but sometimes slightly decreases to simulate cancellations
+        let change;
+        const rand = Math.random();
+        if (rand > 0.8) {
+          // 20% chance of small decrease (cancellations)
+          change = -Math.floor(Math.random() * 50) - 10;
+        } else {
+          // 80% chance of increase
+          change = Math.floor(Math.random() * 300) + 150;
+        }
+        
+        fakeTotalBetsCount += change;
+        
+        // Ensure it stays within realistic bounds
+        if (fakeTotalBetsCount < 30) fakeTotalBetsCount = Math.floor(Math.random() * 20) + 30;
         if (fakeTotalBetsCount >= fakeMaxBetsCount) {
            fakeTotalBetsCount = fakeMaxBetsCount - Math.floor(Math.random() * 100);
         }
 
         // Total win amount: goes up fast like real money, up to ~1M max
-        let winIncrease = (Math.random() * 10000) + 5000; 
+        let winIncrease;
+        const winRand = Math.random();
+        if (winRand > 0.9) {
+          // 10% chance of small decrease (simulating losses or bets closing)
+          winIncrease = -((Math.random() * 2000) + 500);
+        } else {
+          // 90% chance of increase
+          winIncrease = (Math.random() * 10000) + 5000;
+        }
         fakeTotalWinAmount += winIncrease;
+        
+        // Ensure win amount doesn't go negative and stays realistic
+        if (fakeTotalWinAmount < 0) fakeTotalWinAmount = Math.random() * 1000;
 
         // Progressive bar: moves slowly based on 1M being 100% full
         let progressPercent = (fakeTotalWinAmount / 1000000) * 100;
@@ -2584,16 +2640,8 @@
                      betsListContainer.appendChild(betEl);
                  });
                  
-                 // Update fake stats to match actual active bets length to keep it consistent
-                 // Or keep the fake progression. Let's update the actual stats UI.
-                 const totalBetsEl = document.getElementById('fakeTotalBets');
-                 if(totalBetsEl) {
-                     totalBetsEl.textContent = `${totalCount}/${totalCount}`;
-                 }
-                 const totalWinEl = document.getElementById('fakeTotalWin');
-                 if(totalWinEl && (data.status === 'RUNNING' || data.status === 'CRASHED')) {
-                     totalWinEl.textContent = totalWin.toFixed(2);
-                 }
+                 // Real active bets count and win amount can be used here if we had a separate UI for them,
+                 // but we leave the fake stats element alone so it doesn't blink or conflict with the fake stats interval.
              }
           }
           
