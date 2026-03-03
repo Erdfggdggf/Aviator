@@ -1174,6 +1174,19 @@
   </div>
 
   <!-- ADMIN POPUP -->
+  <!-- ADMIN LIVE MULTIPLIER POPUP -->
+  <div class="popup-overlay" id="adminLiveMultiplierPopup" style="z-index: 1005;">
+    <div class="popup-content" style="background: url('admin.png') no-repeat center center; background-size: cover; text-align: center; color: white; border: none; padding: 30px;">
+      <span class="popup-close" onclick="document.getElementById('adminLiveMultiplierPopup').style.display='none'">×</span>
+      <h2 style="margin-top:0; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">Live Multiplier</h2>
+      
+      <div style="background: rgba(0,0,0,0.7); padding: 20px; border-radius: 12px; margin-top: 20px; display: inline-block; min-width: 250px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+         <div id="adminLiveStatus" style="font-size: 18px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase;">WAITING</div>
+         <div id="adminLiveMultiplierValue" style="font-size: 56px; font-weight: bold; text-shadow: 0 0 10px rgba(0,0,0,0.8);">0.0x</div>
+      </div>
+    </div>
+  </div>
+
   <div class="popup-overlay" id="adminPopup">
     <div class="popup-content">
       <span class="popup-close" onclick="document.getElementById('adminPopup').style.display='none'">×</span>
@@ -1199,6 +1212,7 @@
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('adjust')">Adjust Bal</button>
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#3b82f6;" onclick="showAdminSection('create')">+ User</button>
            <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#f59e0b;" onclick="showAdminSection('fakebets')">Fake Bets</button>
+           <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0; background:#10b981;" onclick="document.getElementById('adminLiveMultiplierPopup').style.display='flex'">Live Multiplier</button>
         </div>
         
         <div id="admin-fakebets" style="display:none; margin-top:10px;">
@@ -2491,6 +2505,16 @@
         if (displayM < currentMultiplier) displayM = currentMultiplier;
         
         multDisplay.innerText = displayM.toFixed(2) + 'x';
+        let adminMultiplierValue = document.getElementById('adminLiveMultiplierValue');
+        if(adminMultiplierValue) {
+           adminMultiplierValue.innerText = displayM.toFixed(2) + 'x';
+           adminMultiplierValue.style.color = 'white';
+        }
+        let adminLiveStatus = document.getElementById('adminLiveStatus');
+        if(adminLiveStatus) {
+           adminLiveStatus.innerText = 'RUNNING';
+           adminLiveStatus.style.color = '#22c55e';
+        }
         
         let startX = 20;
         let startY = h - 20;
@@ -2665,6 +2689,17 @@
              plane.style.display = 'none';
              if(document.getElementById('trailSvg')) document.getElementById('trailSvg').style.display = 'none';
              
+             let adminMultiplierValue = document.getElementById('adminLiveMultiplierValue');
+             if(adminMultiplierValue) {
+                adminMultiplierValue.innerText = '0.0x';
+                adminMultiplierValue.style.color = 'white';
+             }
+             let adminLiveStatus = document.getElementById('adminLiveStatus');
+             if(adminLiveStatus) {
+                adminLiveStatus.innerText = 'WAITING';
+                adminLiveStatus.style.color = '#eab308';
+             }
+             
              const countdownContainer = document.getElementById('countdownDisplay');
              const countdownTimer = document.getElementById('countdownTimer');
              const progressFill = document.getElementById('nextRoundFill');
@@ -2778,6 +2813,17 @@
              currentMultiplier = data.multiplier;
              multDisplay.innerText = currentMultiplier.toFixed(2) + 'x';
              multDisplay.style.color = '#ef4444';
+             
+             let adminMultiplierValue = document.getElementById('adminLiveMultiplierValue');
+             if(adminMultiplierValue) {
+                adminMultiplierValue.innerText = currentMultiplier.toFixed(2) + 'x';
+                adminMultiplierValue.style.color = '#ef4444';
+             }
+             let adminLiveStatus = document.getElementById('adminLiveStatus');
+             if(adminLiveStatus) {
+                adminLiveStatus.innerText = 'FLEW AWAY';
+                adminLiveStatus.style.color = '#ef4444';
+             }
              
              if (betStatus === 'ACTIVE' || betStatus === 'PROCESSING') {
                 betStatus = 'NONE';
@@ -3066,6 +3112,7 @@
        document.getElementById('admin-notifications').style.display = (sec==='notifications') ? 'block' : 'none';
        document.getElementById('admin-adjust').style.display = (sec==='adjust') ? 'block' : 'none';
        document.getElementById('admin-chat').style.display = (sec==='chat') ? 'block' : 'none';
+       document.getElementById('admin-fakebets').style.display = (sec==='fakebets') ? 'block' : 'none';
        if(document.getElementById('admin-create')) document.getElementById('admin-create').style.display = (sec==='create') ? 'block' : 'none';
        if(sec==='users') loadAdminUsers();
        if(sec==='tx') loadAdminTx();
