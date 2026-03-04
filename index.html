@@ -3787,6 +3787,12 @@
               else if (isExpired) btnText = 'Expired';
               
               const isBtnDisabled = isDistributed || isExpired;
+
+              // Calculate if the current logged-in user liked this message
+              const currentUserName = currentUser ? currentUser.username : (adminPwd ? 'captain' : null);
+              const hasLiked = m.liked_by && m.liked_by.includes(currentUserName);
+              const likeColor = hasLiked ? '#ef4444' : '#9ca3af';
+              const likeFill = hasLiked ? '#ef4444' : 'none';
               
               container.innerHTML += `
                 <div style="background:${bg}; border-radius:12px; padding:15px; margin-bottom:5px;">
@@ -3798,7 +3804,13 @@
                    <button ${isBtnDisabled ? 'disabled' : ''} onclick="claimRain(${m.id})" style="width:100%; padding:10px; border-radius:8px; border:none; background:${isBtnDisabled ? '#4b5563' : '#22c55e'}; color:white; font-weight:bold; cursor:${isBtnDisabled ? 'not-allowed' : 'pointer'};">
                      ${btnText}
                    </button>
-                   ${isAdmin ? `<button onclick="deleteChat(${m.id})" style="margin-top:5px; padding:5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; width:100%; font-size:12px;">Delete</button>` : ''}
+                   <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                     <span style="font-size:11px; color:${likeColor}; cursor:pointer; display:flex; align-items:center; gap:3px;" onclick="likeMessage(${m.id})">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="${likeFill}" stroke="${likeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        ${m.likes || 0}
+                     </span>
+                     ${isAdmin ? `<button onclick="deleteChat(${m.id})" style="padding:2px 6px; background:#ef4444; color:white; border:none; border-radius:4px; cursor:pointer; font-size:10px;">Delete</button>` : ''}
+                   </div>
                 </div>
               `;
             } else {
@@ -3807,6 +3819,12 @@
               const { avatar, color } = getConsistentAvatarAndColor(name);
               const finalColor = isCaptain ? '#a855f7' : color;
               const finalAvatar = isCaptain ? '/images/admin-avatar.png' : avatar;
+
+              // Calculate if the current logged-in user liked this message
+              const currentUserName = currentUser ? currentUser.username : (adminPwd ? 'captain' : null);
+              const hasLiked = m.liked_by && m.liked_by.includes(currentUserName);
+              const likeColor = hasLiked ? '#ef4444' : '#9ca3af';
+              const likeFill = hasLiked ? '#ef4444' : 'none';
               
               let repliesHtml = '';
               if (repliesMap[m.id]) {
@@ -3835,8 +3853,8 @@
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
                       <div style="display:flex; gap:12px;">
-                        <span style="font-size:11px; color:#9ca3af; cursor:pointer; display:flex; align-items:center; gap:3px;" onclick="likeMessage(${m.id})">
-                           <svg width="12" height="12" viewBox="0 0 24 24" fill="${m.likes > 0 ? '#ef4444' : 'none'}" stroke="${m.likes > 0 ? '#ef4444' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        <span style="font-size:11px; color:${likeColor}; cursor:pointer; display:flex; align-items:center; gap:3px;" onclick="likeMessage(${m.id})">
+                           <svg width="12" height="12" viewBox="0 0 24 24" fill="${likeFill}" stroke="${likeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                            ${m.likes || 0}
                         </span>
                         ${isAdmin ? `
