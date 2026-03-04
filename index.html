@@ -1255,15 +1255,23 @@
              </div>
              <div id="adminChatMessages" style="background:#111827; border:1px solid #374151; padding:10px; height:300px; overflow-y:auto; border-radius:5px; margin-bottom:10px; display:flex; flex-direction:column; gap:10px;">
              </div>
-             <div style="display:flex; gap:10px;">
+             <div style="display:flex; gap:10px; margin-bottom: 10px;">
                <input type="text" id="adminChatInput" class="form-control" placeholder="Admin reply...">
                <button class="btn-submit" style="width:auto; margin:0;" onclick="sendAdminChat()">Send</button>
              </div>
+             <div style="display:flex; gap:10px;">
+               <input type="text" id="adminReplyUsername" class="form-control" placeholder="Target username..." style="max-width:150px;">
+               <input type="text" id="adminReplyMessage" class="form-control" placeholder="Reply message...">
+               <button class="btn-submit" style="width:auto; margin:0; background:#3b82f6;" onclick="adminReplyByUsername()">Reply</button>
+             </div>
              
              <h4 style="margin-top:20px;">Suspend User from Chat</h4>
-             <div style="display:flex; gap:10px;">
+             <div style="display:flex; gap:10px; margin-bottom:10px;">
                <input type="text" id="adminSuspendChatUser" class="form-control" placeholder="Username">
                <button class="btn-submit" style="width:auto; margin:0; background:#ef4444;" onclick="suspendUserChat()">Suspend</button>
+             </div>
+             <div id="suspendedUsersList" style="background:#111827; padding:10px; border-radius:5px; border:1px solid #374151; max-height:150px; overflow-y:auto; display:flex; flex-direction:column; gap:5px;">
+               <!-- Suspended users populated here -->
              </div>
           </div>
           
@@ -3549,6 +3557,7 @@
           document.getElementById('statUsers').innerText = data.users;
           document.getElementById('statBalance').innerText = 'KSH ' + parseFloat(data.balance).toFixed(2);
           document.getElementById('statBets').innerText = data.bets;
+          loadSuspendedUsers();
         } else {
           alert("Invalid staff secret id");
         }
@@ -3771,8 +3780,14 @@
             if(m.type === 'cashrain') {
               const claimedRatio = m.current_claims + ' / ' + m.max_claims;
               const isDistributed = m.current_claims >= m.max_claims;
-              const bg = isDistributed ? '#374151' : '#166534';
-              const btnText = isDistributed ? 'Distributed' : 'Claim';
+              const isExpired = m.cr_seconds_passed > 300;
+              const bg = (isDistributed || isExpired) ? '#374151' : '#166534';
+              let btnText = 'Claim Now';
+              if (isDistributed) btnText = 'Fully Claimed';
+              else if (isExpired) btnText = 'Expired';
+              
+              const isBtnDisabled = isDistributed || isExpired;
+              
               container.innerHTML += `
                 <div style="background:${bg}; border-radius:12px; padding:15px; margin-bottom:5px;">
                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -3780,8 +3795,8 @@
                      <span style="color:#facc15; font-weight:bold;">${m.amount} KES</span>
                    </div>
                    <div style="font-size:12px; color:#d1d5db; margin-bottom:10px;">Available for ${m.max_claims} users (${claimedRatio} claimed)</div>
-                   <button ${isDistributed ? 'disabled' : ''} onclick="claimRain(${m.id})" style="width:100%; padding:10px; border-radius:8px; border:none; background:${isDistributed ? '#4b5563' : '#22c55e'}; color:white; font-weight:bold; cursor:${isDistributed ? 'not-allowed' : 'pointer'};">
-                     ${isDistributed ? 'Fully Claimed' : 'Claim Now'}
+                   <button ${isBtnDisabled ? 'disabled' : ''} onclick="claimRain(${m.id})" style="width:100%; padding:10px; border-radius:8px; border:none; background:${isBtnDisabled ? '#4b5563' : '#22c55e'}; color:white; font-weight:bold; cursor:${isBtnDisabled ? 'not-allowed' : 'pointer'};">
+                     ${btnText}
                    </button>
                    ${isAdmin ? `<button onclick="deleteChat(${m.id})" style="margin-top:5px; padding:5px; background:#ef4444; color:white; border:none; border-radius:3px; cursor:pointer; width:100%; font-size:12px;">Delete</button>` : ''}
                 </div>
@@ -4131,6 +4146,74 @@
           if(data.success) {
             alert("User suspended from chat");
             document.getElementById('adminSuspendChatUser').value = '';
+            loadSuspendedUsers();
+          } else {
+            alert(data.error);
+          }
+        } catch(e) {}
+      }
+
+      async function loadSuspendedUsers() {
+        if(!adminPwd) return;
+        try {
+          const res = await fetch(BACKEND_URL + '/admin/chat/suspended-users', {
+            headers: {'Authorization': adminPwd}
+          });
+          const data = await res.json();
+          if(data.success) {
+            const list = document.getElementById('suspendedUsersList');
+            if(list) {
+              list.innerHTML = '';
+              if(data.users.length === 0) {
+                list.innerHTML = '<div style="color:#9ca3af; font-size:12px;">No suspended users</div>';
+              } else {
+                data.users.forEach(u => {
+                  list.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#1f2937; padding:8px; border-radius:4px;">
+                      <span style="color:#e5e7eb; font-size:14px;">${u}</span>
+                      <button class="btn-submit" style="width:auto; margin:0; padding:4px 8px; font-size:12px; background:#10b981;" onclick="unsuspendUserChat('${u}')">Unsuspend</button>
+                    </div>
+                  `;
+                });
+              }
+            }
+          }
+        } catch(e) {}
+      }
+
+      async function unsuspendUserChat(username) {
+        if(!adminPwd) return;
+        try {
+          const res = await fetch(BACKEND_URL + '/admin/chat/unsuspend-user', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': adminPwd},
+            body: JSON.stringify({username: username})
+          });
+          const data = await res.json();
+          if(data.success) {
+            loadSuspendedUsers();
+          } else {
+            alert(data.error);
+          }
+        } catch(e) {}
+      }
+
+      async function adminReplyByUsername() {
+        const username = document.getElementById('adminReplyUsername').value.trim();
+        const msg = document.getElementById('adminReplyMessage').value.trim();
+        if(!username || !msg) return;
+        
+        try {
+          const res = await fetch(BACKEND_URL + '/admin/chat/reply-by-username', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': adminPwd},
+            body: JSON.stringify({username: username, message: msg})
+          });
+          const data = await res.json();
+          if(data.success) {
+            document.getElementById('adminReplyUsername').value = '';
+            document.getElementById('adminReplyMessage').value = '';
+            fetchChats();
           } else {
             alert(data.error);
           }
