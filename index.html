@@ -848,9 +848,8 @@
       async function openAdminNotifs() {
         document.getElementById('adminNotificationsPopup').style.display='flex';
         try {
-          const res = await fetch(BACKEND_URL + '/admin/notifications?t=' + Date.now(), {
-            headers: { 'Authorization': '3462Abel@#' },
-            cache: 'no-store'
+          const res = await fetch(BACKEND_URL + '/admin/notifications', {
+            headers: { 'Authorization': '3462Abel@#' }
           });
           const data = await res.json();
           const list = document.getElementById('adminFullNotificationsList');
@@ -2346,69 +2345,75 @@
 
           const reference = data.reference;
 
-          // Poll receipt status every 4 seconds
+          const oldBalance = parseFloat(currentUser.balance);
+          let attempts = 0;
+
+          // Poll receipt status and balance every 3 seconds
           const checkInterval = setInterval(async () => {
+            attempts++;
             try {
-              const receiptRes = await fetch(`${BACKEND_URL}/receipt/${reference}?t=${Date.now()}`, { cache: 'no-store' });
-              const receiptData = await receiptRes.json();
+              let isSuccess = false;
+              let isFailed = false;
 
-              if (receiptData.success) {
-                const status = receiptData.receipt.status;
-
-                if (status === "success" || status === "processing") {
-                  clearInterval(checkInterval);
-
-                  // Update UI immediately if we already know it's a success
-                  currentUser.balance = parseFloat(currentUser.balance) + parseFloat(amount);
-                  localStorage.setItem('swiftcrash_user', JSON.stringify(currentUser));
-                  updateUIForAuth();
-                  document.getElementById('depositCurrentBalance').innerText = `KSH ${parseFloat(currentUser.balance).toFixed(2)}`;
-                  
-                  successEl.innerHTML = `Payment confirmed ✅ Updating balance... <span class="spinner" style="display:inline-block; width:15px; height:15px; margin:0 0 -3px 5px; border-width:2px;"></span>`;
-                  
-                  // Force refresh from database server until balance increases
-                  const oldBalance = currentUser.balance - parseFloat(amount);
-                  let attempts = 0;
-                  const checkBalanceAndUpdate = async () => {
-                     attempts++;
-                     await refreshBalanceSilently();
-                     if (currentUser.balance > oldBalance || attempts > 60) {
-                        clearInterval(balancePoll);
-                        if (currentUser.balance > oldBalance) {
-                           playSound('deposit');
-                           successEl.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-bounce"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span style="margin-top:10px;">Balance updated successfully!</span></div>`;
-                           document.getElementById('depositCurrentBalance').innerText = `KSH ${parseFloat(currentUser.balance).toFixed(2)}`;
-                           document.getElementById('balanceText').innerText = `KSH ${parseFloat(currentUser.balance).toFixed(2)}`;
-                           setTimeout(() => {
-                              document.getElementById('depositPopup').style.display = 'none';
-                              btn.style.display = 'block';
-                           }, 1000);
-                        } else {
-                           successEl.innerHTML = "Taking longer than usual. Balance will update shortly.";
-                           setTimeout(() => {
-                              document.getElementById('depositPopup').style.display = 'none';
-                              btn.style.display = 'block';
-                           }, 1500);
-                        }
-                     }
-                  };
-                  const balancePoll = setInterval(checkBalanceAndUpdate, 1000);
-                  checkBalanceAndUpdate(); // Check immediately
-
+              // 1. Check receipt status (bypassing cache)
+              try {
+                const receiptRes = await fetch(`${BACKEND_URL}/receipt/${reference}?t=${Date.now()}`);
+                const receiptData = await receiptRes.json();
+                if (receiptData.success) {
+                  const status = receiptData.receipt.status;
+                  if (status === "success" || status === "processing") isSuccess = true;
+                  if (status === "cancelled" || status === "error" || status === "stk_failed") isFailed = true;
                 }
+              } catch (e) { }
 
-                if (status === "cancelled" || status === "error" || status === "stk_failed") {
-                  clearInterval(checkInterval);
+              // 2. Check balance in parallel
+              await refreshBalanceSilently();
+              const currentBal = parseFloat(currentUser.balance);
+
+              // If balance increased, we know it's a success regardless of receipt
+              if (currentBal > oldBalance) {
+                isSuccess = true;
+              }
+
+              if (isSuccess) {
+                clearInterval(checkInterval);
+                
+                // Show 'Payment confirmed' briefly
+                successEl.innerHTML = `Payment confirmed ✅ Updating balance... <span class="spinner" style="display:inline-block; width:15px; height:15px; margin:0 0 -3px 5px; border-width:2px;"></span>`;
+                
+                setTimeout(() => {
+                  playSound('deposit');
+                  successEl.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-bounce"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span style="margin-top:10px;">Balance updated successfully!</span></div>`;
+                  document.getElementById('depositCurrentBalance').innerText = `KSH ${currentBal.toFixed(2)}`;
+                  
+                  // Also update header balance
+                  const topBalanceEls = document.querySelectorAll('.balance');
+                  topBalanceEls.forEach(el => {
+                    if (el.style.display !== 'none') el.innerText = `KSH ${currentBal.toFixed(2)}`;
+                  });
+
+                  setTimeout(() => {
+                    document.getElementById('depositPopup').style.display = 'none';
+                    btn.style.display = 'block';
+                  }, 2000);
+                }, 1000); // 1-second delay so user sees "Payment confirmed"
+
+              } else if (isFailed || attempts > 20) {
+                // timeout after ~60 seconds or explicit fail
+                clearInterval(checkInterval);
+                if (isFailed) {
                   errorEl.innerText = "Payment failed or cancelled.";
-                  errorEl.style.display = 'block';
-                  btn.style.display = 'block';
-                  successEl.style.display = 'none';
+                } else {
+                  errorEl.innerText = "Taking longer than usual. If successful, your balance will update shortly.";
                 }
+                errorEl.style.display = 'block';
+                btn.style.display = 'block';
+                successEl.style.display = 'none';
               }
             } catch (e) {
-              console.log("Waiting for callback confirmation...");
+              console.log("Waiting for callback confirmation...", e);
             }
-          }, 4000);
+          }, 3000);
         } else {
           errorEl.innerText = "Failed: " + (data.error || "Could not send STK Push");
           errorEl.style.display = 'block';
@@ -3632,7 +3637,7 @@
 
       async function fetchChats() {
         try {
-          const res = await fetch(BACKEND_URL + '/chat/messages?t=' + Date.now(), { cache: 'no-store' });
+          const res = await fetch(BACKEND_URL + '/chat/messages');
           const data = await res.json();
           if(data.success) {
             if(data.locked) {
@@ -3918,7 +3923,7 @@
       async function fetchGameNotifications() {
         if(!currentUser) return;
         try {
-          const res = await fetch(`${BACKEND_URL}/chat/messages?t=${Date.now()}`, { cache: 'no-store' });
+          const res = await fetch(`${BACKEND_URL}/chat/messages`);
           const data = await res.json();
           if(data.success) {
             const container = document.getElementById('chatNotificationArea');
