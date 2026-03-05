@@ -11,14 +11,14 @@
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://swiftcrash.com/">
+  <meta property="og:url" content="https://swiftcrash.online/">
   <meta property="og:title" content="Swiftcrash">
   <meta property="og:description" content="Swiftcrash - The ultimate crash game experience. Play, win, and earn KSH 300 per referral!">
   <meta property="og:image" content="aviator.png">
   
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://swiftcrash.com/">
+  <meta property="twitter:url" content="https://swiftcrash.online/">
   <meta property="twitter:title" content="Swiftcrash">
   <meta property="twitter:description" content="Swiftcrash - The ultimate crash game experience. Play, win, and earn KSH 300 per referral!">
   <meta property="twitter:image" content="aviator.png">
@@ -458,7 +458,7 @@
     <h3 style="margin-top:0;">Refer a Friend</h3>
     <p style="font-size:14px; color:#d1d5db;">You earn KSH 300 when your friend makes a qualifying deposit.</p>
     <div class="share-link-box">
-      <span id="referralLinkText" style="font-size:12px; word-break: break-all;">https://swiftcrash.com/?ref=xxxx</span>
+      <span id="referralLinkText" style="font-size:12px; word-break: break-all;">https://swiftcrash.online/?ref=xxxx</span>
       <button style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="copyReferral()">Copy</button>
     </div>
     <div class="social-share">
@@ -949,7 +949,7 @@
       <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
         <div class="bet-amount" style="background:#1f2937; border-radius:8px; display:flex; align-items:center;">
           <button class="bet-btn-adjust" onclick="adjustBet(-1)" style="padding:10px; background:transparent; font-size:20px; font-weight:normal; border:none; color:white; width:40px;">-</button>
-          <input type="number" class="bet-input" id="betAmount" value="5.00" min="1" max="100000" style="flex:1; width:100%; font-size:16px; font-weight:bold; text-align:center; background:transparent; border:none; color:white;" oninput="updateBetButtonAmount()">
+          <input type="number" class="bet-input" id="betAmount" value="10.00" min="10" max="100000" style="flex:1; width:100%; font-size:16px; font-weight:bold; text-align:center; background:transparent; border:none; color:white;" oninput="updateBetButtonAmount()">
           <button class="bet-btn-adjust" onclick="adjustBet(1)" style="padding:10px; background:transparent; font-size:20px; font-weight:normal; border:none; color:white; width:40px;">+</button>
         </div>
         <div class="bet-presets" style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
@@ -967,7 +967,7 @@
         </button>
         <button class="btn-big-bet" id="betBtn" onclick="handleBetClick()" style="flex:1; margin:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#22c55e; color:white; border:none; border-radius:8px; cursor:pointer; min-height:80px;">
            <span style="font-size:22px; font-weight:normal;">Bet</span>
-           <span id="betBtnAmount" style="font-size:16px; font-weight:normal;">5.00 KES</span>
+           <span id="betBtnAmount" style="font-size:16px; font-weight:normal;">10.00 KES</span>
         </button>
       </div>
     </div>
@@ -1579,15 +1579,15 @@
         <input type="text" class="form-control" id="withdrawPhone" readonly style="color:#9ca3af; background:#1f2937;">
       </div>
       <div class="form-group">
-        <label>Amount (Min KSH 100)</label>
-        <input type="number" class="form-control" id="withdrawAmount" value="100" min="100">
+        <label>Amount (Min KSH 500)</label>
+        <input type="number" class="form-control" id="withdrawAmount" value="500" min="500">
       </div>
       <div class="bet-presets" style="margin-bottom:15px;">
-        <button class="preset" onclick="document.getElementById('withdrawAmount').value=100">100</button>
         <button class="preset" onclick="document.getElementById('withdrawAmount').value=500">500</button>
         <button class="preset" onclick="document.getElementById('withdrawAmount').value=1000">1K</button>
         <button class="preset" onclick="document.getElementById('withdrawAmount').value=2000">2K</button>
         <button class="preset" onclick="document.getElementById('withdrawAmount').value=5000">5K</button>
+         <button class="preset" onclick="document.getElementById('withdrawAmount').value=10000">10K</button>
       </div>
       <p style="font-size: 14px; color: #9ca3af; text-align:center;">Current Balance: <strong id="withdrawCurrentBalance" style="color:white;">KSH 0.00</strong></p>
       
@@ -1648,7 +1648,7 @@
         <h4>Support</h4>
         <div class="support-icons">
           <div class="support-icon" style="background:#3b82f6;" onclick="window.location.href='https://t.me/yourtelegramgroup'"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
-          <div class="support-icon" style="background:#ef4444;" onclick="window.location.href='mailto:support@swiftcrash.com'"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
+          <div class="support-icon" style="background:#ef4444;" onclick="window.location.href='mailto:support@swiftcrash.online'"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
           <div class="support-icon" style="background:#22c55e;" onclick="window.location.href='https://wa.me/254700000000'"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 2.17.7 4.19 1.94 5.86L3 22l4.14-1.06C8.73 21.61 10.3 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg></div>
         </div>
       </div>
@@ -2063,7 +2063,7 @@
         betBtn.style.display = 'block';
         
         // Update share link text
-        const shareUrl = `https://swiftcrash.com/?ref=${currentUser.username}`;
+        const shareUrl = `https://swiftcrash.online/?ref=${currentUser.username}`;
         document.getElementById('referralLinkText').innerText = shareUrl;
         
         // Update social buttons
@@ -2265,7 +2265,7 @@
       const spinner = document.getElementById('withdrawSpinner');
       const btn = document.getElementById('submitWithdrawBtn');
 
-      if (amount < 100) { errorEl.innerText = "Min withdrawal is KSH 100"; errorEl.style.display = 'block'; return; }
+      if (amount < 500) { errorEl.innerText = "Min withdrawal is KSH 500"; errorEl.style.display = 'block'; return; }
       if (parseFloat(amount) > parseFloat(currentUser.balance)) { errorEl.innerText = "Your account balance is too low, kindly make a deposit"; errorEl.style.display = 'block'; return; }
 
       errorEl.style.display = 'none';
