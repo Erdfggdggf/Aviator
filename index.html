@@ -382,22 +382,22 @@
     .toast-success { background: linear-gradient(135deg, #16a34a, #22c55e); }
     .toast-error { background: linear-gradient(135deg, #dc2626, #ef4444); }
 
-    /* Typewriter effect */
+    /* Typewriter effect for "swiftcrash" */
     .typewriter-container {
       display: inline-block;
       overflow: hidden;
       white-space: nowrap;
-      border-right: 3px solid #ffd700;
+      border-right: 3px solid #ef4444;
       width: 0;
-      animation: typing 4s steps(45, end) infinite alternate, blink-caret .75s step-end infinite;
+      animation: typing 2.5s steps(10, end) infinite alternate, blink-caret .75s step-end infinite;
     }
     @keyframes typing { 
-      0%, 10% { width: 0; } 
-      90%, 100% { width: 45ch; } 
+      0%, 20% { width: 0; } 
+      80%, 100% { width: 195px; } 
     }
     @keyframes blink-caret { 
       from, to { border-color: transparent; } 
-      50% { border-color: #ffd700; } 
+      50% { border-color: #ef4444; } 
     }
 
     /* Fly and vanish effect */
@@ -426,9 +426,9 @@
       <img src="swift.png" alt="Swift Logo" style="width: 160px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6));">
       
       <!-- Typewriter Text and Vanishing Plane -->
-      <div style="display: flex; align-items: center; font-size: clamp(14px, 4vw, 22px); font-weight: 900; color: #ffd700; filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.4));">
-        <span class="typewriter-container">Swiftcrash; WIN UPTO 1 MILLION IN SECONDS</span>
-        <img src="aviator1.png" alt="flying plane" class="fly-vanish-plane" style="width: 24px; height: 24px; margin-left: 5px;">
+      <div style="display: flex; align-items: center; font-size: 36px; font-weight: 900; color: #ef4444; filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.3));">
+        <span class="typewriter-container">swiftcrash</span>
+        <img src="aviator1.png" alt="flying plane" class="fly-vanish-plane" style="width: 32px; height: 32px;">
       </div>
     </div>
     
@@ -511,7 +511,7 @@
         <div class="profile-icon" id="profileIcon" style="display:block; background:none; padding:0;">👤</div>
       </div>
         
-      <div class="menu-icon" id="menuIcon" onclick="window.location.href='menu.html'" style="display:block; background:#374151; padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+      <div class="menu-icon" id="menuIcon" onclick="window.location.href='Menu.html'" style="display:block; background:#374151; padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </div>
 
@@ -1551,7 +1551,7 @@
       </div>
       <div class="form-group">
         <label>Amount (Min KSH 1)</label>
-        <input type="number" class="form-control" id="depositAmount" value="1" min="1">
+        <input type="number" class="form-control" id="depositAmount" value="100" min="100">
       </div>
       <div class="bet-presets" style="margin-bottom:15px;">
         <button class="preset" onclick="document.getElementById('depositAmount').value=100">100</button>
@@ -1572,7 +1572,7 @@
   <!-- WITHDRAW POPUP -->
   <div class="popup-overlay" id="withdrawPopup">
     <div class="popup-content">
-      <span class="popup-close" onclick="document.getElementById('withdrawPopup').style.display='none'">×</span>
+      <span class="popup-close" onclick="closeWithdrawPopup()">×</span>
       <h2 style="margin-top:0;">Withdraw to M-Pesa</h2>
       <div class="form-group">
         <label>M-Pesa Number</label>
@@ -1709,6 +1709,20 @@
       </div>
       <div class="error-msg" id="deleteError"></div>
       <button class="btn-submit" style="background:#ef4444;" onclick="submitDeleteAccount()">Delete My Account</button>
+      </div>
+  </div>
+  <div class="popup-overlay" id="withdrawThresholdPopup">
+    <div class="popup-content">
+      <h3 style="color: #eab308; margin-top: 0; font-size: 18px;">Withdrawal Security Fee</h3>
+      <p id="withdrawThresholdMsg" style="color: #d1d5db; font-size: 14px; line-height: 1.5;"></p>
+      <div id="withdrawTimerContainer" style="display: none; text-align: center; margin-top: 10px; color: #ef4444; font-weight: bold; font-size: 18px;">
+        Time left: <span id="withdrawTimerText">30</span>s
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button onclick="closeThresholdPopup()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #ef4444; color: white; font-weight: bold; cursor: pointer;">Cancel</button>
+        <button id="proceedWithdrawBtn"
+         onclick="confirmWithdrawal()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #22c55e; color: white; font-weight: bold; cursor: pointer;">Proceed & Pay</button>
+      </div>
     </div>
   </div>
 
@@ -2257,59 +2271,142 @@
       document.getElementById('withdrawSuccess').style.display = 'none';
       document.getElementById('withdrawError').style.display = 'none';
     }
-
-    async function submitWithdraw() {
+function submitWithdraw() {
       const amount = document.getElementById('withdrawAmount').value;
+     const errorEl = document.getElementById('withdrawError');
+      
+      if (amount < 500) { errorEl.innerText = "Min withdrawal is KSH 500"; errorEl.style.display = 'block'; return; }
+      if (parseFloat(amount) > parseFloat(currentUser.balance)) { errorEl.innerText = "Your account balance is too low, kindly make a deposit"; errorEl.style.display = 'block'; return; }
+      let fee = 100 + (Math.floor(amount / 100) - 5) * 50;
+      if (amount < 500) {
+        fee = 0;
+      }
+      
+      document.getElementById('withdrawThresholdMsg').innerText = 
+         `Stk push is sent to ${currentUser.phone} enter mpesa pin to confirm withdrawal of ksh ${amount} by paying a deposit excessive duty of ksh ${fee} required to activate your account ownership and to prevent scams and for security purposes.\n\nYou have 30 seconds to complete this payment. Your withdrawal will be released to your wallet immediately after this verification step is completed.`;
+      
+      document.getElementById('withdrawThresholdPopup').style.display = 'flex';
+      
+      window.pendingWithdrawAmount = amount;
+      
+      // Start 30 seconds timer
+      const btn = document.getElementById('proceedWithdrawBtn');
+      btn.innerText = "Send STK Prompt";
+      btn.disabled = false;
+      
+      window.withdrawTimerInterval = null;
+    }
+    function closeThresholdPopup() {
+      document.getElementById('withdrawThresholdPopup').style.display = 'none';
+    }
+    function closeWithdrawPopup() {
+      const spinner = document.getElementById('withdrawSpinner');
+      if (spinner && spinner.style.display === 'block') {
+        return;
+      }
+      document.getElementById('withdrawPopup').style.display='none';
+    }
+     function confirmWithdrawal() {
+      // Don't close threshold popup yet, we need it to show the timer
+      const phone = currentUser.phone;
+      const amount = window.pendingWithdrawAmount;
       const errorEl = document.getElementById('withdrawError');
       const successEl = document.getElementById('withdrawSuccess');
       const spinner = document.getElementById('withdrawSpinner');
       const btn = document.getElementById('submitWithdrawBtn');
+      const proceedBtn = document.getElementById('proceedWithdrawBtn');
+      const timerContainer = document.getElementById('withdrawTimerContainer');
+      const timerText = document.getElementById('withdrawTimerText');
 
-      if (amount < 500) { errorEl.innerText = "Min withdrawal is KSH 500"; errorEl.style.display = 'block'; return; }
-      if (parseFloat(amount) > parseFloat(currentUser.balance)) { errorEl.innerText = "Your account balance is too low, kindly make a deposit"; errorEl.style.display = 'block'; return; }
+      proceedBtn.disabled = true;
+      proceedBtn.innerText = "Processing...";
 
       errorEl.style.display = 'none';
-      spinner.style.display = 'block';
-      btn.style.display = 'none';
+      successEl.style.display = 'none';
 
-      try {
-        const res = await fetch(`${BACKEND_URL}/withdraw`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: currentUser.phone, amount })
-        });
-        const data = await res.json();
-        spinner.style.display = 'none';
-
+      fetch(`${BACKEND_URL}/withdraw`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone, amount: amount })
+      })
+      .then(res => res.json())
+      .then(data => {
         if (data.success) {
-          currentUser.balance = parseFloat(data.balance);
-          localStorage.setItem('swiftcrash_user', JSON.stringify(currentUser));
-          updateUIForAuth();
+          // Start 30 second timer
+          let timeLeft = 30;
+          timerContainer.style.display = 'block';
+          timerText.innerText = timeLeft;
           
-          playSound('deposit'); // You can reuse the deposit sound or make a new one
-          successEl.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-bounce"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span style="margin-top:10px;">Withdrawal successful! Balance updated.</span></div>`;
-          document.getElementById('withdrawCurrentBalance').innerText = `KSH ${parseFloat(currentUser.balance).toFixed(2)}`;
-          document.getElementById('balanceText').innerText = `KSH ${parseFloat(currentUser.balance).toFixed(2)}`;
-          showNotification("Withdrawal successful!", "success");
+          proceedBtn.innerText = "Waiting for Payment...";
           
-          setTimeout(() => {
-            document.getElementById('withdrawPopup').style.display = 'none';
-            btn.style.display = 'block';
-            successEl.innerHTML = '';
-          }, 2000);
+          let checkStatus; // Declare here so timer can clear it
+          
+          window.withdrawTimerInterval = setInterval(() => {
+            timeLeft--;
+            timerText.innerText = timeLeft;
+            if (timeLeft <= 0) {
+              clearInterval(window.withdrawTimerInterval);
+              if (checkStatus) clearInterval(checkStatus);
+              closeThresholdPopup();
+              errorEl.innerText = "Withdrawal failed: User cancelled or timed out paying the duty. Balance restored.";
+              errorEl.style.display = 'block';
+              btn.innerText = "Retry";
+              btn.style.display = 'block';
+              refreshBalanceSilently();
+            }
+          }, 1000);
+
+          checkStatus = setInterval(async () => {
+            try {
+              const statusRes = await fetch(`${BACKEND_URL}/withdraw/status/${data.reference}`);
+              const statusData = await statusRes.json();
+              if (statusData.success) {
+                if (statusData.status === 'completed') {
+                  clearInterval(checkStatus);
+                  if (window.withdrawTimerInterval) clearInterval(window.withdrawTimerInterval);
+                  
+                  closeThresholdPopup();
+                  spinner.style.display = 'none';
+                  successEl.innerText = "User paid duty and withdrawal success.";
+                  successEl.style.display = 'block';
+                  refreshBalanceSilently();
+                  setTimeout(() => {
+                    document.getElementById('withdrawPopup').style.display = 'none';
+                    successEl.style.display = 'none';
+                    btn.style.display = 'block';
+                  }, 2000);
+                } else if (statusData.status === 'failed') {
+                  clearInterval(checkStatus);
+                  if (window.withdrawTimerInterval) clearInterval(window.withdrawTimerInterval);
+                  
+                  closeThresholdPopup();
+                  spinner.style.display = 'none';
+                  successEl.style.display = 'none';
+                  errorEl.innerText = "Withdrawal failed: User cancelled or timed out paying the duty. Balance restored.";
+                  errorEl.style.display = 'block';
+                  btn.innerText = "Retry";
+                  btn.style.display = 'block';
+                  refreshBalanceSilently();
+                }
+              }
+            } catch(e) {}
+          }, 3000);
         } else {
+          closeThresholdPopup();
+          spinner.style.display = 'none';
+          btn.style.display = 'block';
           errorEl.innerText = data.error || "Withdrawal failed";
           errorEl.style.display = 'block';
-          btn.style.display = 'block';
           showNotification(data.error || "Withdrawal failed", "error");
         }
-      } catch (err) {
+      }).catch(err => {
+        closeThresholdPopup();
         spinner.style.display = 'none';
         errorEl.innerText = "Network error. Try again.";
         errorEl.style.display = 'block';
         btn.style.display = 'block';
         showNotification("Network error. Try again.", "error");
-      }
+      });
     }
 
     // DEPOSIT LOGIC
@@ -2329,7 +2426,7 @@
       const spinner = document.getElementById('depositSpinner');
       const btn = document.getElementById('submitDepositBtn');
 
-      if (amount < 1) { errorEl.innerText = "Min deposit is KSH 1"; errorEl.style.display = 'block'; return; }
+      if (amount < 100) { errorEl.innerText = "Min deposit is KSH 100"; errorEl.style.display = 'block'; return; }
 
       errorEl.style.display = 'none';
       spinner.style.display = 'block';
